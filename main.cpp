@@ -7,20 +7,24 @@
 BOOL running;
 int linput;
 Renderer rend;
+int x, y;
 
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-{   
+{
+    RECT rect;//to delete
 
-    int WindowWidth = 800, WindowHeight = 600;
+    int WindowWidth = 800, WindowHeight = 800;
 
     WNDCLASS WindowClass = { };
     WindowClass.style = CS_HREDRAW | CS_VREDRAW;
     WindowClass.lpfnWndProc = WindowProc;
     WindowClass.hInstance = hInstance;
     WindowClass.lpszClassName = L"SnakeFeverWindow";
+   // WindowClass.hIcon=
+    //WindowClass.hCursor=
     WindowClass.hbrBackground = 0;
     RegisterClass(&WindowClass);
 
@@ -30,10 +34,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     if (hwnd == NULL)
         return 0;
 
-    rend.init(hInstance, hwnd, GetWindowDC(hwnd), WindowWidth,WindowHeight);
+    rend.init(hInstance, hwnd, GetWindowDC(hwnd));
 
     running = TRUE;
     linput = 0; 
+    x = 0, y = 0;
     MSG msg = { };
     while (running) {
 
@@ -46,8 +51,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 
          //render
-        rend.drawPoint(22, 22, 22);
-        rend.drawScreen();
+        rend.fillAll(0x0000ff); 
+        rend.drawRect(0, 0, rend.getWidth()-1, rend.getHeight() - 1, 0xff0000);
+        //rend.drawPoint(, 0xff0000);
+        rend.drawLine(0, 0,x,y,0xff0000);
+        rend.drawRect(0, 0, x, y, 0xff0000);
+       // rend.drawScreen();
+
+
         //UpdateWindow(hwnd);
 
     }
@@ -59,22 +70,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
+    LRESULT result=0;
     switch (uMsg)
     {
     case WM_KEYDOWN: {
         switch (wParam) {
             case VK_LEFT:
-            linput++;
+                x--;
                 break;
             case VK_RIGHT:
-                running = FALSE;
+                x++;
                 break;
             case VK_UP:
-
+                y--;
                 break;
             case VK_DOWN:
-
+                y++;
                 break;
             default:
                 break;
@@ -82,6 +93,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     }
     break;
+    case WM_LBUTTONDOWN: {
+        x = LOWORD(lParam);
+        y = HIWORD(lParam);
+    }
+    break;
+    case WM_MOUSEMOVE: {
+       // int mx= LOWORD(lParam),my= HIWORD(lParam);
+        //rend.drawRect( mx- 5,my-5, mx + 5, my +5, 0xff0000);
+    }
+                     break;
     case WM_DESTROY:
     {
        running = FALSE;
@@ -89,20 +110,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     break;
     case WM_PAINT:
     {
-       //rend.drawScreen();
+       rend.drawScreen();
     }
     break;
     case WM_SIZE:
     {
-       rend.resize(LOWORD(lParam), HIWORD(lParam));
-       return 0;
+
+  
+       rend.resize();
+       
     }
     break;
     
     default: {
-        break;
+       result= DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return result;
 }
 
