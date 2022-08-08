@@ -70,9 +70,12 @@ public:
                     if (bytesNotPad != 0) 
                     image.seekg(bytesToPad, image.cur);
                 }
-                for (uint32_t xy = 0; xy < width*height; xy++)
-
-                    ((unsigned int*)data)[xy]= ((unsigned int*)dataReversed)[width*height-1- xy] ;
+                for (uint32_t xy = 0; xy < width * height; xy++)
+                {
+                    ((unsigned int*)data)[xy] = ((unsigned int*)dataReversed)[width * height - 1 - xy];
+                    ((char*)data)[(xy * 4) +3] = 0xff;
+                }
+                    
 
                 
                 VirtualFree(dataReversed, 0, MEM_RELEASE);

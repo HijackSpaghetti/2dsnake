@@ -152,7 +152,7 @@ public:
 		return 0;
 
 	};
-	int drawAlphaImage(image img, int x1, int y1, int x2, int y2) {
+	int drawImageA(image img, int xdest, int ydest, int framewigth, int frameheight,byte addalpha) {
 		void* im;
 		im = img.getImage();
 		int imwidth = img.getImageWidth();
@@ -160,22 +160,46 @@ public:
 		int xbound = imwidth;
 		int ybound = imheight;
 		int xstart = 0, ystart = 0;
-		if (x1 < 0)
-			xstart = xstart - x1;
-		if (y1 < 0)
-			ystart = ystart - y1;
-		if (imwidth + x1 > WindowWidth)
-			xbound = (WindowWidth - x1);
-		if (imheight + y1 > WindowHeight)
-			ybound = WindowHeight - y1;
+		unsigned int pixeldest,pixelsource,result;
+
+		byte redd, greend, blued, reds, greens, blues,alpha, remalpha, r,g,b;
+		if (xdest < 0)
+			xstart = xstart - xdest;
+		if (ydest < 0)
+			ystart = ystart - ydest;
+		if (imwidth + xdest > WindowWidth)
+			xbound = (WindowWidth - xdest);
+		if (imheight + ydest > WindowHeight)
+			ybound = WindowHeight - ydest;
 		//300 pixel display, 200p x offset, 150p, pixels to draw 100. 
 
 		for (int iy = ystart; iy < ybound; iy++)
 		{
 			for (int ix = xstart; ix < xbound; ix++) {
-				((unsigned int*)content)[((iy + y1) * WindowWidth) + (ix + x1)] = ((unsigned int*)im)[iy * imwidth + ix];
+				pixelsource = ((unsigned int*)im)[iy * imwidth + ix];
+				
+				
+
+				alpha = (pixelsource & 0xff000000) >> 24;
+				if (alpha == 0xff)
+					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = ((unsigned int*)im)[iy * imwidth + ix];
+
+				if ((alpha != 0)||(alpha!=0xff)) {
+					pixeldest = ((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)];
+					remalpha = 0xff - alpha;
+
+					r = (((pixeldest & 0x000000ff) * remalpha) + ((reds = pixelsource & 0x000000ff) * alpha))>>8;
+					g = ((((pixeldest & 0x0000ff00) >> 8) * remalpha) + ((greens = (pixelsource & 0x0000ff00) >> 8) * alpha)) >>8;
+					b = ((((pixeldest & 0x00ff0000) >> 16) * remalpha) + (((pixelsource & 0x00ff0000) >> 16) * alpha)) >>8;
+
+					result = int((unsigned char)(r) | (unsigned char)(g) << 8 | (unsigned char)(b) << 16 | 0xff << 24);
 
 
+					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = result;
+
+
+					
+				}
 			}
 
 

@@ -9,7 +9,7 @@ BOOL running;
 int linput;
 Renderer rend;
 int x, y;
-
+byte alpha;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -40,11 +40,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     running = TRUE;
     linput = 0; 
     x = 0, y = 0;
-    image dot, owl,testpng;
+    alpha = 0;
+    image dot, owl,testpng,frame;
     MSG msg = { };
   //  dot.loadBMP("pictures/dot.bmp");
     owl.loadBMP("pictures/owl.bmp");
-    testpng.loadPNG("pictures/Untitled2.png");
+    testpng.loadPNG("pictures/greentransparent.png");
+    frame.loadPNG("pictures/frame.png");
 
     while (running) {
 
@@ -57,13 +59,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 
          //render
-        rend.fillAll(0xff000000); //fill opaque black 
+        rend.fillAll(0xff0000ff); //fill opaque black 
         
         //rend.drawPoint(, 0xff0000);
         //rend.drawLine(0, 0,x,y,0xff0000);
         //rend.drawRect(0, 0, x, y, 0xff0000);
-        rend.drawImage(testpng, x, y, 0, 0);
-        rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
+        
+        rend.drawImageA(testpng, 200, 200, 0, 0,alpha);
+        rend.drawImageA(testpng, 0, 0, 0, 0, alpha);
+        rend.drawImageA(frame, 50, 50, 0, 0, alpha);
+        rend.drawImageA(testpng, x, y, 0, 0, alpha);
+       // rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
 
         
       //  rend.drawScreen();
