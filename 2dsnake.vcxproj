@@ -139,9 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lib\lodepng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="imageProc.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="lib\lodepng.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

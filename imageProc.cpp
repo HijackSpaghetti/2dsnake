@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <windows.h>
+#include "lib/lodepng.h"
 
 
 
@@ -15,7 +16,11 @@ uint32_t img_size;
 
 public:
     void* data;// data must contain pixel info in form of RRGGBBAA starting from top left corner
-	image() {};
+    image() {
+        height = 0;
+        width = 0;
+        img_size = 0;
+    };
 
 	int loadBMP(const char* filename) {//Only supports simple noncompressed BMP files without transparency
         std::ifstream image;
@@ -70,15 +75,43 @@ public:
                     ((unsigned int*)data)[xy]= ((unsigned int*)dataReversed)[width*height-1- xy] ;
 
                 
-            
+                VirtualFree(dataReversed, 0, MEM_RELEASE);
 
 
         }
-       
 		image.close();
 		return 0;
 	
 	};
+
+    int loadPNG(const char* filename) {//PNG handling method, truecolor with alpha type is expected
+        std::vector<unsigned char> pngimg; //the raw pixels
+        unsigned int lwidth, lheight;
+
+
+        lodepng::decode(pngimg, lwidth, lheight, filename);
+
+        width = lwidth;
+        height = lheight;
+        img_size = width * height * 4;
+
+        data = VirtualAlloc(0, img_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+        for (uint32_t xy = 0; xy < width * height; xy++)
+        {
+            ((char*)data)[(xy * 4)+2] = pngimg[(xy * 4)];
+            ((char*)data)[(xy * 4) + 1] = pngimg[(xy * 4)+1];
+            ((char*)data)[(xy * 4)] = pngimg[(xy * 4)+2];
+            ((char*)data)[(xy * 4) + 3] = pngimg[(xy * 4)+3];
+            
+
+        }
+           
+
+
+        return 0;
+
+    };
 
     void* getImage() { 
         return data;

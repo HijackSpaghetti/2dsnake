@@ -40,10 +40,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     running = TRUE;
     linput = 0; 
     x = 0, y = 0;
-    image dot, owl;
+    image dot, owl,testpng;
     MSG msg = { };
   //  dot.loadBMP("pictures/dot.bmp");
     owl.loadBMP("pictures/owl.bmp");
+    testpng.loadPNG("pictures/Untitled2.png");
 
     while (running) {
 
@@ -61,7 +62,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         //rend.drawPoint(, 0xff0000);
         //rend.drawLine(0, 0,x,y,0xff0000);
         //rend.drawRect(0, 0, x, y, 0xff0000);
-        rend.drawImage(owl, x, y, 0, 0);
+        rend.drawImage(testpng, x, y, 0, 0);
         rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
 
         
