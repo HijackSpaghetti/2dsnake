@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include "renderer.cpp"
+//#include "imageProc.cpp"
 
 
 
@@ -39,7 +40,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     running = TRUE;
     linput = 0; 
     x = 0, y = 0;
+    image dot, owl;
     MSG msg = { };
+  //  dot.loadBMP("pictures/dot.bmp");
+    owl.loadBMP("pictures/owl.bmp");
+
     while (running) {
 
         //input    
@@ -51,12 +56,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 
          //render
-        rend.fillAll(0x0000ff); 
-        rend.drawRect(0, 0, rend.getWidth()-1, rend.getHeight() - 1, 0xff0000);
+        rend.fillAll(0xff000000); //fill opaque black 
+        
         //rend.drawPoint(, 0xff0000);
-        rend.drawLine(0, 0,x,y,0xff0000);
-        rend.drawRect(0, 0, x, y, 0xff0000);
-       // rend.drawScreen();
+        //rend.drawLine(0, 0,x,y,0xff0000);
+        //rend.drawRect(0, 0, x, y, 0xff0000);
+        rend.drawImage(owl, x, y, 0, 0);
+        rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
+
+        
+      //  rend.drawScreen();
 
 
         //UpdateWindow(hwnd);
@@ -94,8 +103,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     break;
     case WM_LBUTTONDOWN: {
-        x = LOWORD(lParam);
-        y = HIWORD(lParam);
+      //  x = LOWORD(lParam);
+       // y = HIWORD(lParam);
     }
     break;
     case WM_MOUSEMOVE: {
