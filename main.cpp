@@ -41,13 +41,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     linput = 0; 
     x = 0, y = 0;
     alpha = 0;
-    image dot, owl,testpng,frame;
+    image dot, owl,testpng,frame,colors;
     MSG msg = { };
   //  dot.loadBMP("pictures/dot.bmp");
     owl.loadBMP("pictures/owl.bmp");
     testpng.loadPNG("pictures/greentransparent.png");
     frame.loadPNG("pictures/frame.png");
-
+    colors.loadPNG("pictures/untitled3.png");
     while (running) {
 
         //input    
@@ -69,10 +69,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         rend.drawImageA(testpng, 0, 0, 0, 0, alpha);
         rend.drawImageA(frame, 50, 50, 0, 0, alpha);
         rend.drawImageA(testpng, x, y, 0, 0, alpha);
+        rend.drawImageA(testpng, x, y, 0, 0, alpha);
+        rend.drawImageA(testpng, x, y, 0, 0, alpha);
        // rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
 
         
-      //  rend.drawScreen();
+        rend.drawScreen();
 
 
         //UpdateWindow(hwnd);
@@ -102,6 +104,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 break;
             case VK_DOWN:
                 y++;
+                break;
+            case 'X':
+                if (alpha<0xff)
+                alpha++;
+                break;
+            case 'Z':
+                if (alpha>0)
+                alpha--;
                 break;
             default:
                 break;

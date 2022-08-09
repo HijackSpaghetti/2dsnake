@@ -152,7 +152,7 @@ public:
 		return 0;
 
 	};
-	int drawImageA(image img, int xdest, int ydest, int framewigth, int frameheight,byte addalpha) {
+	int drawImageA(image img, int xdest, int ydest, int framewigth, int frameheight,byte subalpha) {
 		void* im;
 		im = img.getImage();
 		int imwidth = img.getImageWidth();
@@ -160,9 +160,9 @@ public:
 		int xbound = imwidth;
 		int ybound = imheight;
 		int xstart = 0, ystart = 0;
-		unsigned int pixeldest,pixelsource,result;
+		byte colorS[4], colorD[4], colorR[4];//RGBA
 
-		byte redd, greend, blued, reds, greens, blues,alpha, remalpha, r,g,b;
+		byte remalpha;
 		if (xdest < 0)
 			xstart = xstart - xdest;
 		if (ydest < 0)
@@ -171,32 +171,33 @@ public:
 			xbound = (WindowWidth - xdest);
 		if (imheight + ydest > WindowHeight)
 			ybound = WindowHeight - ydest;
-		//300 pixel display, 200p x offset, 150p, pixels to draw 100. 
+
 
 		for (int iy = ystart; iy < ybound; iy++)
 		{
 			for (int ix = xstart; ix < xbound; ix++) {
-				pixelsource = ((unsigned int*)im)[iy * imwidth + ix];
-				
-				
 
-				alpha = (pixelsource & 0xff000000) >> 24;
-				if (alpha == 0xff)
+				(*(unsigned int*)&colorS) = ((unsigned int*)im)[iy * imwidth + ix];
+				if (subalpha != 0){
+					if (subalpha >= colorS[3]) {
+						colorS[3] = 0;
+					}
+					else colorS[3] -= subalpha;
+				}
+
+				
+				if (colorS[3] == 0xff)
 					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = ((unsigned int*)im)[iy * imwidth + ix];
 
-				if ((alpha != 0)||(alpha!=0xff)) {
-					pixeldest = ((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)];
-					remalpha = 0xff - alpha;
-
-					r = (((pixeldest & 0x000000ff) * remalpha) + ((reds = pixelsource & 0x000000ff) * alpha))>>8;
-					g = ((((pixeldest & 0x0000ff00) >> 8) * remalpha) + ((greens = (pixelsource & 0x0000ff00) >> 8) * alpha)) >>8;
-					b = ((((pixeldest & 0x00ff0000) >> 16) * remalpha) + (((pixelsource & 0x00ff0000) >> 16) * alpha)) >>8;
-
-					result = int((unsigned char)(r) | (unsigned char)(g) << 8 | (unsigned char)(b) << 16 | 0xff << 24);
-
-
-					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = result;
-
+				else if (colorS[3]!= 0) {
+		
+					(*(unsigned int*)&colorD) = ((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)];
+					remalpha = 0xff - colorS[3];
+					colorR[0] = ((colorD[0] * remalpha) + (colorS[0] * colorS[3])) >> 8;
+					colorR[1] = ((colorD[1] * remalpha) + (colorS[1] * colorS[3])) >> 8;
+					colorR[2] = ((colorD[2] * remalpha) + (colorS[2] * colorS[3])) >> 8;
+				
+					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = (*(unsigned int*)&colorR);
 
 					
 				}
