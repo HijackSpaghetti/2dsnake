@@ -10,6 +10,7 @@ int linput;
 Renderer rend;
 int x, y;
 byte alpha;
+double size;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -41,15 +42,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     linput = 0; 
     x = 60, y = 80;
     alpha = 0;
+    size = 1;
     image dot, owl,testpng,frame,colors,bigcolors;
     MSG msg = { };
   //  dot.loadBMP("pictures/dot.bmp");
-    owl.loadBMP("pictures/owl.bmp");
-    testpng.loadPNG("pictures/greentransparent.png");
-    frame.loadPNG("pictures/frame.png");
-    colors.loadPNG("pictures/untitled3.png");
-    bigcolors.imgResize(colors, x, y);
-    //colors.imgResize(x,y);
+    //owl.loadBMP("pictures/owl.bmp");
+    //testpng.loadPNG("pictures/greentransparent.png");
+    //frame.loadPNG("pictures/frame.png");
+    colors.loadPNG("pictures/untitled2.png");
+    //bigcolors.imgResize(x, y);
+    bigcolors.copy(colors);
     while (running) {
 
         //input    
@@ -61,23 +63,24 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 
          //render
-       // rend.fillAll(0xff0000ff); //fill opaque black 
+       rend.fillAll(0xff000000); //fill opaque black 
         
         //rend.drawPoint(, 0xff0000);
         //rend.drawLine(0, 0,x,y,0xff0000);
-        rend.drawRect(0, 0, x, y, 0xff0000);
-        rend.drawImage(owl, 0, 0, 0, 0);
-       // rend.drawImageA(colors, 0, 0, 0, 0, 0, 0, alpha);
-        rend.drawImageA(testpng, 200, 200, 0, 0, 0, 0, alpha);
+        //rend.drawRect(0, 0, x, y, 0xff0000);
+       // rend.drawImage(owl, 0, 0, 0, 0);
+        bigcolors.imgResize(0.4);
+        rend.drawImageA(bigcolors, 0, 0, 0, 0, 0, 0, alpha);
+       // rend.drawImageA(testpng, 200, 200, 0, 0, 0, 0, alpha);
       //  rend.drawImageA(colors, 0, 0, 0, 0, 0, 0, alpha);
         //rend.drawImageFrame(frame, 30, 30, 30, 30, 0, 0, alpha);
-       //rend.drawImageResized(colors, 0.9);
+
        //rend.drawImageA(bigcolors, 0, 0, 0, 0, 0, 0, alpha);
 
        // rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
 
         
-        //rend.drawScreen();
+        rend.drawScreen();
 
 
         //UpdateWindow(hwnd);
@@ -115,6 +118,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case 'Z':
                 if (alpha>0)
                 alpha--;
+                break;
+            case 'A':
+                if (size > 0.01)
+                    size-=0.1;
+                break;
+            case 'S':
+                if (size < 5.01)
+                    size+=0.1;
                 break;
             default:
                 break;

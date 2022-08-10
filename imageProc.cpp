@@ -8,31 +8,54 @@
 
 class image {
 private:
-
-    uint32_t width;
-    uint32_t height;
-    uint32_t img_size;
-
-    float maxf(float a, float b) { return (a < b) ? a : b; };
-    float lerp(float s, float e, float t) { return s + (e - s) * t; }
-    float blerp(float c00, float c10, float c01, float c11, float tx, float ty) {
+    void* filedata;// data must contain pixel info in form of RRGGBBAA starting from top left corner
+    uint32_t filewidth;
+    uint32_t fileheight;
+    uint32_t fileimg_size;
+    uint32_t transfwidth;
+    uint32_t transfheight;
+    uint32_t transfimg_size;
+    float maxf(float a, float b) { return (a < b) ? a : b; };//find max of two floats
+    /*float lerp(float s, float e, float t) { return s + (e - s) * t; }//linear interpolation function
+    float blerp(float c00, float c10, float c01, float c11, float tx, float ty) {//bilinear interpoolation function
+        return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty);
+    }*/
+    byte lerp(byte s, byte e, float t) { return s + (e - s) * t; }//linear interpolation function
+    byte blerp(byte c00, byte c10, byte c01, byte c11, float tx, float ty) {//bilinear interpoolation function
         return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty);
     }
-    byte getByte(int value, int n) {
-        return (value >> (n * 8) & 0xFF);
-    }
+
 
 
 public:
-    void* data;// data must contain pixel info in form of RRGGBBAA starting from top left corner
+    void* transfdata;// data must contain pixel info in form of RRGGBBAA starting from top left corner
     image() {
-        height = 0;
-        width = 0;
-        img_size = 0;
+        fileheight = 0;
+        filewidth = 0;
+        fileimg_size = 0;
     };
 
 
-    
+    int free() {
+        fileheight = 0;
+        filewidth = 0;
+        fileimg_size = 0;
+        VirtualFree(filedata, 0, MEM_RELEASE);
+        VirtualFree(transfdata, 0, MEM_RELEASE);
+        return 0;
+    };
+   int copy ( image imgS) {
+        fileheight = imgS.fileheight;
+        filewidth = imgS.filewidth;
+        fileimg_size = imgS.fileimg_size;
+        filedata = VirtualAlloc(0, fileimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        for (uint32_t xy = 0; xy < filewidth * fileheight; xy++)
+        {
+            ((unsigned int*)filedata)[xy] = ((unsigned int*)imgS.filedata)[xy];
+        }
+        reset();
+        return 0;
+    };
 
     int loadBMP(const char* filename) {//Only supports simple noncompressed BMP files without transparency
         std::ifstream image;
@@ -54,8 +77,8 @@ public:
             image.seekg(8, image.cur);              //we dont need to read "reserved" bytes
             image.read((char*)&imgstart, sizeof(imgstart));
             image.read((char*)&hsize, sizeof(hsize));
-            image.read((char*)&width, sizeof(width));
-            image.read((char*)&height, sizeof(height));
+            image.read((char*)&filewidth, sizeof(filewidth));
+            image.read((char*)&fileheight, sizeof(fileheight));
             image.read((char*)&planes, sizeof(planes));
             image.read((char*)&bit_count, sizeof(bit_count));
             image.read((char*)&compression, sizeof(compression));
@@ -63,29 +86,29 @@ public:
             if (compression != 0) {
                 throw std::runtime_error("Compressed image not supported");
             }
-            int bytesInLine = (width * bit_count) / 8;
+            int bytesInLine = (filewidth * bit_count) / 8;
             int bytesToRead = bit_count / 8;
-            img_size = (width * height * 4);
-            bytesNotPad = (width * (bit_count) / 8) % 4;
+            fileimg_size = (filewidth * fileheight * 4);
+            bytesNotPad = (filewidth * (bit_count) / 8) % 4;
             bytesToPad = 4 - bytesNotPad;
             void* dataReversed;
 
             int ioffset;
-            dataReversed = VirtualAlloc(0, img_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-            data = VirtualAlloc(0, img_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+            dataReversed = VirtualAlloc(0, fileimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+            filedata = VirtualAlloc(0, fileimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
             image.seekg(imgstart, image.beg);
-            for (uint32_t y = 0; y < height; y++) {
-                for (uint32_t x = 0; x < width; x++) {
-                    ioffset = (y * width * 4) + (x * 4);
+            for (uint32_t y = 0; y < fileheight; y++) {
+                for (uint32_t x = 0; x < filewidth; x++) {
+                    ioffset = (y * filewidth * 4) + (x * 4);
                     image.read((char*)dataReversed + (ioffset), bytesToRead);
                 }
                 if (bytesNotPad != 0)
                     image.seekg(bytesToPad, image.cur);
             }
-            for (uint32_t xy = 0; xy < width * height; xy++)
+            for (uint32_t xy = 0; xy < filewidth * fileheight; xy++)
             {
-                ((unsigned int*)data)[xy] = ((unsigned int*)dataReversed)[width * height - 1 - xy];
-                ((char*)data)[(xy * 4) + 3] = 0xff;
+                ((unsigned int*)filedata)[xy] = ((unsigned int*)dataReversed)[filewidth * fileheight - 1 - xy];
+                ((char*)filedata)[(xy * 4) + 3] = 0xff;
             }
 
 
@@ -95,6 +118,7 @@ public:
 
         }
         image.close();
+        reset();
         return 0;
 
     };
@@ -106,58 +130,80 @@ public:
 
         lodepng::decode(pngimg, lwidth, lheight, filename);
 
-        width = lwidth;
-        height = lheight;
-        img_size = width * height * 4;
+        filewidth = lwidth;
+        fileheight = lheight;
+        fileimg_size = filewidth * fileheight * 4;
 
-        data = VirtualAlloc(0, img_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        filedata = VirtualAlloc(0, fileimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
-        for (uint32_t xy = 0; xy < width * height; xy++)
+        for (uint32_t xy = 0; xy < filewidth * fileheight; xy++)
         {
-            ((char*)data)[(xy * 4) + 2] = pngimg[(xy * 4)];
-            ((char*)data)[(xy * 4) + 1] = pngimg[(xy * 4) + 1];
-            ((char*)data)[(xy * 4)] = pngimg[(xy * 4) + 2];
-            ((char*)data)[(xy * 4) + 3] = pngimg[(xy * 4) + 3];
+            ((char*)filedata)[(xy * 4) + 2] = pngimg[(xy * 4)];
+            ((char*)filedata)[(xy * 4) + 1] = pngimg[(xy * 4) + 1];
+            ((char*)filedata)[(xy * 4)] = pngimg[(xy * 4) + 2];
+            ((char*)filedata)[(xy * 4) + 3] = pngimg[(xy * 4) + 3];
 
 
         }
 
-
+        reset();
 
         return 0;
 
     };
+    int reset() {
+        VirtualFree(transfdata, 0, MEM_RELEASE);
+        transfdata = VirtualAlloc(0, fileimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        transfheight=fileheight;
+        transfwidth=filewidth;
+        transfimg_size=fileimg_size;
+        int length = filewidth * fileheight;
+        for (uint32_t xy = 0; xy < length; xy++)
+        {
+            ((unsigned int*)transfdata)[xy] = ((unsigned int*)filedata)[xy];
+        }
 
+        return 0;
+    };
     void* getImage() {
-        return data;
+        return transfdata;
     };
     uint32_t getImageHeight() {
-        return height;
+        return transfheight;
     };
     uint32_t getImageWidth() {
-        return width;
+        return transfwidth;
     };
     uint32_t getImageSize() {
-        return img_size;
+        return transfimg_size;
     };
-    int imgResize(double mul) {
 
-
-
-        return 0;
+    uint32_t getFImageWidth() {
+        return filewidth;
     };
+    uint32_t getFImageHeight() {
+        return fileheight;
+    };
+
+    uint32_t getFImageSize() {
+        return fileimg_size;
+    };
+
 
     uint32_t getPixel(int x, int y) {
-        return (((unsigned int*)data)[((y * width) + x)]);
+        return (((unsigned int*)filedata)[((y * filewidth) + x)]);
     };
 
-    int imgResize(image imgS, int newWidth, int newHeight) {
-        img_size = newWidth * newHeight * 4;
+    int imgResize(int newWidth, int newHeight) {
+        if ((newWidth == transfwidth) && (newHeight == transfheight))
+            return -1;
 
-        VirtualFree(data, 0, MEM_RELEASE);
-        data = VirtualAlloc(0, img_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        int sourceWidth = imgS.getImageWidth();
-        int sourceHeight = imgS.getImageHeight();
+       transfimg_size = newWidth * newHeight * 4;
+       transfwidth = newWidth;
+       transfheight = newHeight;
+       VirtualFree(transfdata, 0, MEM_RELEASE);
+        transfdata = VirtualAlloc(0, transfimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
 
 
 
@@ -167,36 +213,49 @@ public:
                 for (int x = 0; x < newWidth; x++) {
 
 
-                    float gx = maxf(x / (float)(newWidth) * (sourceWidth)-0.5f, sourceWidth - 1);
-                    float gy = maxf(y / (float)(newHeight) * (sourceHeight)-0.5, sourceHeight - 1);
+                    float gx = maxf(x / (float)(newWidth) * (filewidth)-0.5f, filewidth - 1);
+                    float gy = maxf(y / (float)(newHeight) * (fileheight)-0.5f, fileheight - 1);
                     int gxi = (int)gx;
                     int gyi = (int)gy;
+                    float gxd = gx - gxi;
+                    float gyd = gy - gyi;
                     uint32_t result = 0;
                     byte c00[4],c10[4],c01[4],c11[4];
-                    (*(unsigned int*)&c00) = imgS.getPixel(gxi, gyi);
+                    (*(unsigned int*)&c00) = getPixel(gxi, gyi);
                    
-                    (*(unsigned int*)&c10) = imgS.getPixel(gxi + 1, gyi);
+                    (*(unsigned int*)&c10) = getPixel(gxi + 1, gyi);
                    
-                    (*(unsigned int*)&c01) = imgS.getPixel(gxi, gyi + 1);
+                   (*(unsigned int*)&c01) = getPixel(gxi, gyi + 1);
                     
-                    (*(unsigned int*)&c11) = imgS.getPixel(gxi + 1, gyi + 1);
+                    (*(unsigned int*)&c11) = getPixel(gxi + 1, gyi + 1);
                     
-                    for (int i = 0; i < 4; i++) {
-                        result |= (uint8_t)blerp(c00[i], c10[i], c01[i], c11[i], gx - gxi, gy - gyi) << (8 * i);
-                    }
-                    ((unsigned int*)data)[(y * newWidth) + x] = result;
+                    result |= blerp(c00[0], c10[0], c01[0], c11[0], gxd, gyd);
+                    result |= blerp(c00[1], c10[1], c01[1], c11[1], gxd, gyd) << 8;
+                    result |= blerp(c00[2], c10[2], c01[2], c11[2], gxd, gyd) << 16;
+                    result |= blerp(c00[3], c10[3], c01[3], c11[3], gxd, gyd) << 24;
+                    ((unsigned int*)transfdata)[(y * newWidth) + x] = result;
                 }
             }
 
 
 
     
-        width = newWidth;
-        height = newHeight;
+
 
 
         return 0;
     };
+    int imgResize(double mul) {
+        int cx = filewidth * mul, cy = fileheight * mul;
+        if ((cx != transfwidth) || (cy != transfheight))
+         return imgResize(cx, cy);
+        
+
+    };
+    int imgRotate(image imgS, double theta) {
+
+
     
+    }
 
 };

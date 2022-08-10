@@ -24,7 +24,7 @@ private:
 	int windowRBorder;		//size of right border
 	int WindowWidth = 800;        //Width of the actual client area
 	int WindowHeight = 600;       //Height of the actual client area
-	
+	image imagebuffer;			//placeholder for images to transform on the fly
 
 public:
 	Renderer() {
@@ -238,16 +238,6 @@ public:
 		return 0;
 
 	};
-
-	int drawImageResized(image img, double mul) {
-		
-		
-		int nw = (img.getImageWidth() * mul), nh=(img.getImageHeight()*mul);
-		
-		drawImageA(img, 0, 0, 0, 0, 0, 0, 0);
-	
-		return 0;
-	}
 
 
 	int fillAll(unsigned int color) {
