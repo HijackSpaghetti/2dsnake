@@ -11,6 +11,7 @@ Renderer rend;
 int x, y;
 byte alpha;
 double size;
+double theta;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -49,12 +50,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     //owl.loadBMP("pictures/owl.bmp");
     //testpng.loadPNG("pictures/greentransparent.png");
     //frame.loadPNG("pictures/frame.png");
-    colors.loadPNG("pictures/untitled3.png");
+    colors.loadPNG("pictures/untitled2.png");
     //bigcolors.imgResize(x, y);
     bigcolors.copy(colors);
-    double theta=0;
+    theta= 1.5708;
+    bigcolors.imgRotate(0);
+
     while (running) {
-        theta += 0.001;
+        
         //input    
         PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
         TranslateMessage(&msg);
@@ -70,8 +73,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         //rend.drawLine(0, 0,x,y,0xff0000);
         //rend.drawRect(0, 0, x, y, 0xff0000);
        // rend.drawImage(owl, 0, 0, 0, 0);
-        bigcolors.imgResize(0.7);
-        bigcolors.imgRotate(1.5708);
+        bigcolors.imgResize(0.3);
+       bigcolors.imgRotate(theta);//20*3.14/180
+     // bigcolors.imgHue(0xffffffff);
         rend.drawImageA(bigcolors, 200, 200, 0, 0, 0, 0, alpha);
        // rend.drawImageA(testpng, 200, 200, 0, 0, 0, 0, alpha);
       //  rend.drawImageA(colors, 0, 0, 0, 0, 0, 0, alpha);
@@ -115,11 +119,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 break;
             case 'X':
                 if (alpha<0xff)
-                alpha++;
+                theta += 0.003;
                 break;
             case 'Z':
-                if (alpha>0)
-                alpha--;
+                theta -= 0.003;
                 break;
             case 'A':
                 if (size > 0.01)

@@ -16,6 +16,8 @@ private:
     uint32_t transfwidth;
     uint32_t transfheight;
     uint32_t transfimg_size;
+    double angle;
+    unsigned int hue;
     float maxf(float a, float b) { return (a < b) ? a : b; };//find max of two floats
     /*float lerp(float s, float e, float t) { return s + (e - s) * t; }//linear interpolation function
     float blerp(float c00, float c10, float c01, float c11, float tx, float ty) {//bilinear interpoolation function
@@ -28,6 +30,10 @@ private:
     void sizeRefresh() {
         imgResize(transfwidth, transfheight);
     };
+    void sizeRotationRefresh() {
+        sizeRefresh();
+        imgRotate(angle);
+    };
 
 
 public:
@@ -36,6 +42,8 @@ public:
         fileheight = 0;
         filewidth = 0;
         fileimg_size = 0;
+        angle = 0;
+        hue = 0x00000000;
     };
 
 
@@ -43,6 +51,7 @@ public:
         fileheight = 0;
         filewidth = 0;
         fileimg_size = 0;
+
         VirtualFree(filedata, 0, MEM_RELEASE);
         VirtualFree(transfdata, 0, MEM_RELEASE);
         return 0;
@@ -51,6 +60,8 @@ public:
         fileheight = imgS.fileheight;
         filewidth = imgS.filewidth;
         fileimg_size = imgS.fileimg_size;
+        angle = 0;
+        hue = 0x00000000;
         filedata = VirtualAlloc(0, fileimg_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         for (uint32_t xy = 0; xy < filewidth * fileheight; xy++)
         {
@@ -255,13 +266,13 @@ public:
     };
     int imgRotate(double theta) { //theta in degrees
         sizeRefresh();
+        angle=theta;
         void* result;
         double radians = theta;
-       // double radians = 3.14159265358979323846 / 180 * theta;
+     //  double grad = 3.14159265358979323846 / 180 * theta;
         int xc = transfwidth/2, yc = transfheight/2;//point of rotation
         double sintheta = sin(radians), costheta = cos(radians);//those are invariable for given angle
-        double sinmtheta = sin(-1*radians), cosmtheta = cos(-1*radians);
-        int xinc, yinc;//calculating new image dimensions
+
         int bl_x1 = 0, bl_y1 = 0, br_x1= transfwidth, br_y1= 0, tr_x1=transfwidth, tr_y1 = transfheight,tl_x1=0,tl_y1=transfheight;//need to calculate 2 points to find new dimensions
         int br_x2 = (int)(costheta * (br_x1 - xc) - sintheta * (br_y1 - yc) + xc);//calculate side point(only for theta<90deg)
         int tr_y2 = (int)(sintheta * (tr_x1 - xc) + costheta * (tr_y1 - yc) + yc);//top point
@@ -272,7 +283,7 @@ public:
         int bl_x2 = (int)(costheta * (bl_x1 - xc) - sintheta * (bl_y1 - yc) + xc);
         int br_y2 = (int)(sintheta * (br_x1 - xc) + costheta * (br_y1 - yc) + yc);
 
-        int newwidth = max((abs(tr_x2) + abs(bl_x2)),(abs(br_x2)+abs(tl_x2))), newheight =max((abs(tr_y2)+abs(bl_y2)),(abs(br_y2) + abs(tl_y2)));
+        int newwidth = max((abs(tr_x2) + abs(bl_x2)), (abs(br_x2) + abs(tl_x2))), newheight = (max((abs(tr_y2) + abs(bl_y2)), (abs(br_y2) + abs(tl_y2)))); //max((abs(tr_y2) + abs(bl_y2)), (abs(br_y2) + abs(tl_y2)))
         
         int newdimens = newwidth * newheight;
         int result_size = 4 * newdimens;
@@ -284,16 +295,20 @@ public:
         }*/
         //boudry points (0;0) (transfwidth;-0) (0; transfheight) (transfwidth;transfheight)
         int x1, y1, x2, y2;
-        int yca = newwidth/2, xca = newheight/2;
+        int yca = newheight/2, xca = newwidth/2;
         uint32_t value;
         for (int y = 0; y < newheight; y++) {
             for (int x = 0; x < newwidth; x++) {
-                int x2 = (int)(cosmtheta * (x - xca) -sinmtheta * (y - yca)+xc);
-                int y2 = (int)(sinmtheta * (x - xca) +cosmtheta * (y - yca)+yc);//where x1,y1 coordinates of untransformed image, starting from center, x2,y2 - where x1y1 value must be
+                int x2 = (int)(costheta * (x-xca) -sintheta * (y-yca)+xc);
+                int y2 = (int)(sintheta * (x-xca) +costheta * (y-yca)+yc);//where x1,y1 coordinates of untransformed image, starting from center, x2,y2 - where x1y1 value must be
                 
-                if((0<=x2)&&(x2<transfwidth)&&(0<=y2)&&(y2<transfheight)){ 
+                if ((0 <= x2) && (x2 < transfwidth) && (0 <= y2) && (y2 < transfheight)) {
+
                     value = ((unsigned int*)transfdata)[(y2 * transfwidth) + x2];
-                ((unsigned int*)result)[((y) * newwidth) + (x)] = value; }
+                    ((unsigned int*)result)[((y) * newwidth) + (x)] = value;
+                
+            }
+                //else  ((unsigned int*)result)[((y)*newwidth) + (x)] = 0xff000000;
                 
 
                 
@@ -315,8 +330,49 @@ public:
         transfimg_size = result_size;
         return 0;
     }
+    int imgHue(unsigned int color) {
+        sizeRotationRefresh();
+        hue = color;
+        int ybound = transfheight, xbound = transfwidth;
+        byte colorS[4], colorD[4], colorR[4], remalpha, alpha;//RGBA
+        (*(unsigned int*)&colorS) = color;
+        for (int iy =0; iy < ybound; iy++)
+        {
+            for (int ix = 0; ix < xbound; ix++) {
+
+
+                (*(unsigned int*)&colorD) = ((unsigned int*)transfdata)[((iy)*transfwidth) + (ix)];
+                if (colorD[3] != 0x00) {
+                if (colorS[3] == 0xff)
+                    ((unsigned int*)transfdata)[((iy) * transfwidth) + (ix)] = (*(unsigned int*)&colorS);
+
+                else if (colorS[3] != 0) {
+                    
+                        
+                        alpha = colorS[3];
+                        remalpha = 0xff - colorS[3];
+                        colorR[0] = ((colorD[0] * remalpha) + (colorS[0] * colorS[3])) >> 8;
+                        colorR[1] = ((colorD[1] * remalpha) + (colorS[1] * colorS[3])) >> 8;
+                        colorR[2] = ((colorD[2] * remalpha) + (colorS[2] * colorS[3])) >> 8;
+
+                        ((unsigned int*)transfdata)[((iy)*transfwidth) + (ix)] = (*(unsigned int*)&colorR);
+
+                    
+
+                }
+            }
+            }
+
+        }
+
+        return 0;
+    }
     int refresh() {
-    
+
+        sizeRotationRefresh();
+        imgHue(hue);
+
+        return 0;
     };
 
 };
