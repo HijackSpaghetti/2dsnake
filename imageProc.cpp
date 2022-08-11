@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <windows.h>
+#include <math.h>
 #include "lib/lodepng.h"
 
 
@@ -24,7 +25,9 @@ private:
     byte blerp(byte c00, byte c10, byte c01, byte c11, float tx, float ty) {//bilinear interpoolation function
         return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty);
     }
-
+    void sizeRefresh() {
+        imgResize(transfwidth, transfheight);
+    };
 
 
 public:
@@ -195,8 +198,7 @@ public:
     };
 
     int imgResize(int newWidth, int newHeight) {
-        if ((newWidth == transfwidth) && (newHeight == transfheight))
-            return -1;
+
 
        transfimg_size = newWidth * newHeight * 4;
        transfwidth = newWidth;
@@ -250,12 +252,71 @@ public:
         if ((cx != transfwidth) || (cy != transfheight))
          return imgResize(cx, cy);
         
-
     };
-    int imgRotate(image imgS, double theta) {
+    int imgRotate(double theta) { //theta in degrees
+        sizeRefresh();
+        void* result;
+        double radians = theta;
+       // double radians = 3.14159265358979323846 / 180 * theta;
+        int xc = transfwidth/2, yc = transfheight/2;//point of rotation
+        double sintheta = sin(radians), costheta = cos(radians);//those are invariable for given angle
+        double sinmtheta = sin(-1*radians), cosmtheta = cos(-1*radians);
+        int xinc, yinc;//calculating new image dimensions
+        int bl_x1 = 0, bl_y1 = 0, br_x1= transfwidth, br_y1= 0, tr_x1=transfwidth, tr_y1 = transfheight,tl_x1=0,tl_y1=transfheight;//need to calculate 2 points to find new dimensions
+        int br_x2 = (int)(costheta * (br_x1 - xc) - sintheta * (br_y1 - yc) + xc);//calculate side point(only for theta<90deg)
+        int tr_y2 = (int)(sintheta * (tr_x1 - xc) + costheta * (tr_y1 - yc) + yc);//top point
+        int tl_x2 = (int)(costheta * (tl_x1 - xc) - sintheta * (tl_y1 - yc) + xc);
+        int bl_y2 = (int)(sintheta * (bl_x1 - xc) + costheta * (bl_y1 - yc) + yc);
+        int tl_y2 = (int)(sintheta * (tl_x1 - xc) + costheta * (tl_y1 - yc) + yc);
+        int tr_x2 = (int)(costheta * (tr_x1 - xc) - sintheta * (tr_y1 - yc) + xc);
+        int bl_x2 = (int)(costheta * (bl_x1 - xc) - sintheta * (bl_y1 - yc) + xc);
+        int br_y2 = (int)(sintheta * (br_x1 - xc) + costheta * (br_y1 - yc) + yc);
+
+        int newwidth = max((abs(tr_x2) + abs(bl_x2)),(abs(br_x2)+abs(tl_x2))), newheight =max((abs(tr_y2)+abs(bl_y2)),(abs(br_y2) + abs(tl_y2)));
+        
+        int newdimens = newwidth * newheight;
+        int result_size = 4 * newdimens;
+
+        result = VirtualAlloc(0, result_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        /*for (uint32_t xy = 0; xy < newdimens; xy++)
+        {
+            ((unsigned int*)result)[xy] = 0xff000000;
+        }*/
+        //boudry points (0;0) (transfwidth;-0) (0; transfheight) (transfwidth;transfheight)
+        int x1, y1, x2, y2;
+        int yca = newwidth/2, xca = newheight/2;
+        uint32_t value;
+        for (int y = 0; y < newheight; y++) {
+            for (int x = 0; x < newwidth; x++) {
+                int x2 = (int)(cosmtheta * (x - xca) -sinmtheta * (y - yca)+xc);
+                int y2 = (int)(sinmtheta * (x - xca) +cosmtheta * (y - yca)+yc);//where x1,y1 coordinates of untransformed image, starting from center, x2,y2 - where x1y1 value must be
+                
+                if((0<=x2)&&(x2<transfwidth)&&(0<=y2)&&(y2<transfheight)){ 
+                    value = ((unsigned int*)transfdata)[(y2 * transfwidth) + x2];
+                ((unsigned int*)result)[((y) * newwidth) + (x)] = value; }
+                
+
+                
+            }
+
+        }
 
 
-    
+
+        VirtualFree(transfdata, 0, MEM_RELEASE);
+        transfdata=VirtualAlloc(0, result_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        for (uint32_t xy = 0; xy < newdimens; xy++)
+        {
+            ((unsigned int*)transfdata)[xy] = ((unsigned int*)result)[xy];
+        }
+        VirtualFree(result, 0, MEM_RELEASE);
+        transfwidth = newwidth;
+        transfheight = newheight;
+        transfimg_size = result_size;
+        return 0;
     }
+    int refresh() {
+    
+    };
 
 };

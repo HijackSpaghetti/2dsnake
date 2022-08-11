@@ -49,11 +49,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     //owl.loadBMP("pictures/owl.bmp");
     //testpng.loadPNG("pictures/greentransparent.png");
     //frame.loadPNG("pictures/frame.png");
-    colors.loadPNG("pictures/untitled2.png");
+    colors.loadPNG("pictures/untitled3.png");
     //bigcolors.imgResize(x, y);
     bigcolors.copy(colors);
+    double theta=0;
     while (running) {
-
+        theta += 0.001;
         //input    
         PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
         TranslateMessage(&msg);
@@ -63,14 +64,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 
          //render
-       rend.fillAll(0xff000000); //fill opaque black 
+       rend.fillAll(0xff0000ff); //fill opaque black 
         
         //rend.drawPoint(, 0xff0000);
         //rend.drawLine(0, 0,x,y,0xff0000);
         //rend.drawRect(0, 0, x, y, 0xff0000);
        // rend.drawImage(owl, 0, 0, 0, 0);
-        bigcolors.imgResize(0.4);
-        rend.drawImageA(bigcolors, 0, 0, 0, 0, 0, 0, alpha);
+        bigcolors.imgResize(0.7);
+        bigcolors.imgRotate(1.5708);
+        rend.drawImageA(bigcolors, 200, 200, 0, 0, 0, 0, alpha);
        // rend.drawImageA(testpng, 200, 200, 0, 0, 0, 0, alpha);
       //  rend.drawImageA(colors, 0, 0, 0, 0, 0, 0, alpha);
         //rend.drawImageFrame(frame, 30, 30, 30, 30, 0, 0, alpha);
