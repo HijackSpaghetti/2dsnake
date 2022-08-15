@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "sprite.cpp"
+#include "clocker.cpp"
 //LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
 
 
@@ -18,7 +19,7 @@ private:
 	void* output;
 	int cwidth=300;
 	int cheight=300;
-
+	bool content_equal_output = false;
 	int WindowX;            //X pos of the actual window, not the curses window
 	int WindowY;            //Y pos of the actual window, not the curses window
 	int windowTBorder;		//size of top border
@@ -63,8 +64,11 @@ public:
 
 
 		bmiupdate();
-		cwidth = WindowWidth;
-		cheight = WindowHeight;
+		if (content_equal_output == true) {
+			cwidth = WindowWidth;
+			cheight = WindowHeight;
+		}
+
 		if (content)VirtualFree(content, 0, MEM_RELEASE);
 		content = VirtualAlloc(0, cwidth * cheight * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 		return 0;
@@ -75,7 +79,18 @@ public:
 	int getHeight() {
 		return cheight;
 	};
-
+	int set_content_equal_output(){
+		content_equal_output = true;
+		resize();
+		return 0;
+	}
+	int set_content_size(int contentwidth, int contentheight) {
+		content_equal_output = false;
+		cwidth = contentwidth;
+		cheight = contentheight;
+		resize();
+		return 0;
+	}
 	int stretchContent() {//nearest neigbour content stretching for output
 		
 		uint32_t tsize = WindowWidth * WindowHeight * sizeof(unsigned int);

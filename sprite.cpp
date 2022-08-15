@@ -199,8 +199,8 @@ public:
         refreshdefault(number);
         return 0;
     };
-    int flipV() {
-        void* bbuffer;//
+    int flipV() {//never use before Rotate method
+        void* bbuffer;
 
         bbuffer = VirtualAlloc(0, twidth*theight*4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         for (uint32_t xy = 0; xy < twidth*theight; xy++)
@@ -231,7 +231,7 @@ public:
             for (int x = 0; x < twidth; x++) {
 
 
-                ((unsigned int*)buffer)[(y * twidth) + x] = ((unsigned int*)bbuffer)[((theight*twidth)-(y * twidth)) + x];
+                ((unsigned int*)buffer)[(y * twidth) + x] = ((unsigned int*)bbuffer)[((theight-y-1)* twidth) + x];
 
             }
         }
