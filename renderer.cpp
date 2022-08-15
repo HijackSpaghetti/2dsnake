@@ -14,8 +14,11 @@ private:
 	HDC WindowDC;           //Device Context of the window, used for drawing
 	BITMAPINFO bmi;         //bitmap info struct for StretchDiBits
 	WINDOWINFO wi;			//windows info struct
-	void* content;			//finalised content for StretchDiBits
-	void* acontent;			//content with alphachannel
+	void* content;//finalised content for StretchDiBit
+	void* output;
+	int cwidth=600;
+	int cheight=600;
+	//void* acontent;			//content with alphachannel
 	int WindowX;            //X pos of the actual window, not the curses window
 	int WindowY;            //Y pos of the actual window, not the curses window
 	int windowTBorder;		//size of top border
@@ -60,19 +63,46 @@ public:
 
 
 		bmiupdate();
-		int buffer_size = WindowWidth * WindowHeight * sizeof(unsigned int);
+		cwidth = WindowWidth;
+		cheight = WindowHeight;
 		if (content)VirtualFree(content, 0, MEM_RELEASE);
-		content = VirtualAlloc(0, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		content = VirtualAlloc(0, cwidth * cheight * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 		return 0;
 	};
 	int getWidth() {
-		return WindowWidth;
+		return cwidth;
 	};
 	int getHeight() {
-		return WindowHeight;
+		return cheight;
 	};
+
+	int stretchContent() {
+		
+		uint32_t tsize = WindowWidth * WindowHeight * sizeof(unsigned int);
+		double x_ratio = cwidth / (double)WindowWidth;
+		double y_ratio = cheight / (double)WindowHeight;
+		VirtualFree(output, 0, MEM_RELEASE);
+		output = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		int px, py;
+		for (int y = 0; y < WindowHeight; y++) {
+			for (int x = 0; x < WindowWidth; x++) {
+
+
+				px = (int)(x * x_ratio);
+				py = (int)(y * y_ratio);
+				((unsigned int*)output)[(y * WindowWidth) + x] = ((unsigned int*)content)[ + (py * cwidth) + px];
+
+			}
+		}
+
+
+		return 0;
+	
+	};
+
 	int drawScreen() {
-		StretchDIBits(WindowDC, windowLBorder, WindowHeight + windowTBorder - 1, WindowWidth, -WindowHeight, 0, 0, WindowWidth, WindowHeight, content, &bmi, DIB_RGB_COLORS, SRCCOPY);
+		stretchContent();
+		StretchDIBits(WindowDC, windowLBorder, WindowHeight + windowTBorder - 1, WindowWidth, -WindowHeight, 0, 0, WindowWidth, WindowHeight, output, &bmi, DIB_RGB_COLORS, SRCCOPY);
 		return 0;
 	};
 	int drawLine(int x1, int y1, int x2, int y2, int color) {
@@ -82,7 +112,7 @@ public:
 		if (x1 == x2) {
 			for (int y = y1; y < y2; y++) {
 
-				((unsigned int*)content)[y * WindowWidth + x1] = color;
+				((unsigned int*)content)[y * cwidth + x1] = color;
 			}
 		}
 
@@ -95,9 +125,9 @@ public:
 					if (x < x2)
 						yi = m * (x + 1) + b;
 					for (int i = y; i < yi; i++)
-						((unsigned int*)content)[i * WindowWidth + x] = color;
+						((unsigned int*)content)[i * cwidth + x] = color;
 
-					((unsigned int*)content)[y * WindowWidth + x] = color;
+					((unsigned int*)content)[y * cwidth + x] = color;
 				}
 
 			}
@@ -110,13 +140,13 @@ public:
 		
 		for (int y = y1; y < y2; y++) {
 
-			((unsigned int*)content)[y * WindowWidth + x1] = color;
-			((unsigned int*)content)[y * WindowWidth + x2] = color;
+			((unsigned int*)content)[y * cwidth + x1] = color;
+			((unsigned int*)content)[y * cwidth + x2] = color;
 		}
 		for (int x = x1; x < x2; x++) {
 
-			((unsigned int*)content)[y1 * WindowWidth + x] = color;
-			((unsigned int*)content)[y2 * WindowWidth + x] = color;
+			((unsigned int*)content)[y1 *cwidth + x] = color;
+			((unsigned int*)content)[y2 * cwidth + x] = color;
 		}
 		return 0;
 
@@ -133,16 +163,16 @@ public:
 			xstart = xstart - x1;
 		if (y1 < 0)
 			ystart = ystart - y1;
-		if (imwidth + x1 > WindowWidth)
-			xbound = (WindowWidth - x1);
-		if (imheight + y1 > WindowHeight)
-			ybound = WindowHeight - y1;
+		if (imwidth + x1 > cwidth)
+			xbound = (cwidth - x1);
+		if (imheight + y1 > cheight)
+			ybound = cheight - y1;
 		//300 pixel display, 200p x offset, 150p, pixels to draw 100. 
 		
 		for (int iy=ystart; iy < ybound; iy++)
 		{
 			for (int ix=xstart; ix < xbound; ix++) {
-			((unsigned int*)content)[((iy+y1)*WindowWidth) + (ix+x1)] = ((unsigned int*)im)[iy * imwidth + ix];
+			((unsigned int*)content)[((iy+y1)*cwidth) + (ix+x1)] = ((unsigned int*)im)[iy * imwidth + ix];
 
 
 			}
@@ -244,12 +274,12 @@ public:
 		if (ydest < 0)
 			ystart = ystart - ydest;
 
-		if (imwidth + xdest > WindowWidth)
-			xbound = (WindowWidth - xdest);
+		if (imwidth + xdest > cwidth)
+			xbound = (cwidth - xdest);
 
 
-		if (imheight + ydest > WindowHeight)
-			ybound = WindowHeight - ydest;
+		if (imheight + ydest > cheight)
+			ybound = cheight - ydest;
 		if (sourcewidth != 0)
 			if (xbound > sourcewidth)
 				xbound = sourcewidth;
@@ -272,18 +302,18 @@ public:
 
 
 				if (colorS[3] == 0xff)
-					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = (*(unsigned int*)&colorS);
+					((unsigned int*)content)[((iy + ydest) * cwidth) + (ix + xdest)] = (*(unsigned int*)&colorS);
 
 				else if (colorS[3] != 0) {
 
-					(*(unsigned int*)&colorD) = ((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)];
+					(*(unsigned int*)&colorD) = ((unsigned int*)content)[((iy + ydest) * cwidth) + (ix + xdest)];
 					alpha = colorS[3];
 					remalpha = 0xff - colorS[3];
 					colorR[0] = ((colorD[0] * remalpha) + (colorS[0] * colorS[3])) >> 8;
 					colorR[1] = ((colorD[1] * remalpha) + (colorS[1] * colorS[3])) >> 8;
 					colorR[2] = ((colorD[2] * remalpha) + (colorS[2] * colorS[3])) >> 8;
 
-					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = (*(unsigned int*)&colorR);
+					((unsigned int*)content)[((iy + ydest) * cwidth) + (ix + xdest)] = (*(unsigned int*)&colorR);
 
 
 				}
@@ -340,9 +370,9 @@ public:
 
 	int fillAll(unsigned int color) {
 
-		for (int y = 0; y < WindowHeight; y++) {
-			for (int x = 0; x <= WindowWidth; x++) {
-				((unsigned int*)content)[y * WindowWidth + x] = color;
+		for (int y = 0; y < cheight; y++) {
+			for (int x = 0; x <= cwidth; x++) {
+				((unsigned int*)content)[y * cwidth+ x] = color;
 			}
 		}
 		return 0;
@@ -353,7 +383,7 @@ public:
 		if (y < WindowHeight)
 		{
 			if (x < WindowWidth) {
-				((unsigned int*)content)[y*WindowWidth+x] = color;
+				((unsigned int*)content)[y*cwidth+x] = color;
 			}
 		}
 
