@@ -1,5 +1,5 @@
 #include <windows.h>
-#include "imageProc.cpp"
+#include "sprite.cpp"
 //LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
 
 
@@ -121,11 +121,11 @@ public:
 		return 0;
 
 	};
-	int drawImage(image img, int x1, int y1, int x2, int y2) {
+	int drawImage(sprite img, int x1, int y1, int x2, int y2) {
 		void* im;
-		im = img.getImage();
-		int imwidth = img.getImageWidth(); 
-		int imheight = img.getImageHeight();
+		im = img.getSprite();
+		int imwidth = img.getWidth(); 
+		int imheight = img.getHeight();
 		int xbound = imwidth;
 		int ybound = imheight;
 		int xstart = 0, ystart = 0;
@@ -152,11 +152,11 @@ public:
 		return 0;
 
 	};
-	int drawImageA(image img, int xdest, int ydest, int xsource, int ysource, int sourcewidth,int sourceheight, byte subalpha) {
+	int drawImageA(sprite img, int xdest, int ydest, int xsource, int ysource, int sourcewidth,int sourceheight, byte subalpha) {
 		void* im;
-		im = img.getImage();
-		int imwidth = img.getImageWidth();
-		int imheight = img.getImageHeight();
+		im = img.getSprite();
+		int imwidth = img.getWidth();
+		int imheight = img.getHeight();
 		if (sourcewidth+xsource > imwidth)
 			return -1;
 		if (sourceheight+ysource > imheight)
@@ -191,7 +191,7 @@ public:
 		{
 			for (int ix = xstart; ix < xbound; ix++) {
 
-				(*(unsigned int*)&colorS) = ((unsigned int*)im)[(iy+ysource)*imwidth + (ix+xsource)];
+				(*(unsigned int*)&colorS) = ((unsigned int*)im)[((iy)*imwidth)+ (ix)];//bugging
 				if (subalpha != 0){
 					if (subalpha >= colorS[3]) {
 						colorS[3] = 0;
@@ -223,7 +223,77 @@ public:
 		return 0;
 
 	};
+	int drawSpriteA(sprite img, int xdest, int ydest, int xsource, int ysource, int sourcewidth, int sourceheight, byte subalpha) {
+		void* im;
+		im = img.getSprite();
+		int imwidth = img.getWidth();
+		int imheight = img.getHeight();
+		if (sourcewidth + xsource > imwidth)
+			return -1;
+		if (sourceheight + ysource > imheight)
+			return -1;
 
+		int xbound = imwidth;
+		int ybound = imheight;
+		int xstart = 0, ystart = 0;
+		byte colorS[4], colorD[4], colorR[4];//RGBA
+
+		byte remalpha, alpha;
+		if (xdest < 0)
+			xstart = xstart - xdest;
+		if (ydest < 0)
+			ystart = ystart - ydest;
+
+		if (imwidth + xdest > WindowWidth)
+			xbound = (WindowWidth - xdest);
+
+
+		if (imheight + ydest > WindowHeight)
+			ybound = WindowHeight - ydest;
+		if (sourcewidth != 0)
+			if (xbound > sourcewidth)
+				xbound = sourcewidth;
+		if (sourceheight != 0)
+			if (ybound > sourceheight)
+				ybound = sourceheight;
+
+
+		for (int iy = ystart; iy < ybound; iy++)
+		{
+			for (int ix = xstart; ix < xbound; ix++) {
+
+				(*(unsigned int*)&colorS) = ((unsigned int*)im)[((iy)*imwidth) + (ix)];
+				if (subalpha != 0) {
+					if (subalpha >= colorS[3]) {
+						colorS[3] = 0;
+					}
+					else colorS[3] -= subalpha;
+				}
+
+
+				if (colorS[3] == 0xff)
+					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = (*(unsigned int*)&colorS);
+
+				else if (colorS[3] != 0) {
+
+					(*(unsigned int*)&colorD) = ((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)];
+					alpha = colorS[3];
+					remalpha = 0xff - colorS[3];
+					colorR[0] = ((colorD[0] * remalpha) + (colorS[0] * colorS[3])) >> 8;
+					colorR[1] = ((colorD[1] * remalpha) + (colorS[1] * colorS[3])) >> 8;
+					colorR[2] = ((colorD[2] * remalpha) + (colorS[2] * colorS[3])) >> 8;
+
+					((unsigned int*)content)[((iy + ydest) * WindowWidth) + (ix + xdest)] = (*(unsigned int*)&colorR);
+
+
+				}
+			}
+
+
+		}
+		return 0;
+
+	};
 
 
 	int drawImageFrame(image img, int xdest, int ydest, int framewidth, int frameheight, int frameXpos, int frameYpos, byte subalpha) {
@@ -238,7 +308,35 @@ public:
 		return 0;
 
 	};
+	int drawImageCenteredFrame(image img, int xdest, int ydest, int framewidth, int frameheight, int frameXpos, int frameYpos, byte subalpha) {//centered
 
+		int sourceX = framewidth * frameXpos;
+		int sourceY = frameheight * frameYpos;
+		int nxdest = xdest-(img.getImageWidth() / 2);
+		int nydest = ydest - (img.getImageHeight() / 2);
+		int e = 0;
+		if ((e = drawImageA(img, nxdest, nydest, sourceX, sourceY, framewidth, frameheight, subalpha)) != 0)
+			return e;
+
+
+		return 0;
+
+	};
+
+
+	int drawSprite(sprite img, int xdest, int ydest, int xsource, int ysource, int sourcewidth, int sourceheight, byte subalpha) {//centered
+
+
+		int nxdest = xdest - (img.getWidth() / 2);
+		int nydest = ydest - (img.getHeight() / 2);
+		int e = 0;
+		if ((e = drawSpriteA(img, nxdest, nydest, xsource, ysource, sourcewidth, sourceheight, subalpha)) != 0)
+			return e;
+
+
+		return 0;
+
+	};
 
 	int fillAll(unsigned int color) {
 

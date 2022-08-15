@@ -12,6 +12,7 @@ int x, y;
 byte alpha;
 double size;
 double theta;
+int f;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -44,18 +45,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     x = 60, y = 80;
     alpha = 0;
     size = 1;
-    image dot, owl,testpng,frame,colors,bigcolors;
+    image dot, owl,testpng,frame,colors;
     MSG msg = { };
   //  dot.loadBMP("pictures/dot.bmp");
     //owl.loadBMP("pictures/owl.bmp");
     //testpng.loadPNG("pictures/greentransparent.png");
     //frame.loadPNG("pictures/frame.png");
-    colors.loadPNG("pictures/untitled2.png");
+    colors.loadPNG("pictures/font2.png");
     //bigcolors.imgResize(x, y);
-    bigcolors.copy(colors);
-    theta= 1.5708;
-    bigcolors.imgRotate(0);
-
+    sprite bigcolors(colors,90,100,20,20,20,20);
+    theta= 0;
+   // bigcolors.imgRotate(0);
+    f = 0;
     while (running) {
         
         //input    
@@ -63,33 +64,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
          //simulate
-
+        theta -= 0.001;
 
 
          //render
-       rend.fillAll(0xff0000ff); //fill opaque black 
+       rend.fillAll(0x000000ff); //fill opaque black 
         
         //rend.drawPoint(, 0xff0000);
         //rend.drawLine(0, 0,x,y,0xff0000);
         //rend.drawRect(0, 0, x, y, 0xff0000);
        // rend.drawImage(owl, 0, 0, 0, 0);
-        bigcolors.imgResize(0.3);
-       bigcolors.imgRotate(theta);//20*3.14/180
-     // bigcolors.imgHue(0xffffffff);
-        rend.drawImageA(bigcolors, 200, 200, 0, 0, 0, 0, alpha);
-       // rend.drawImageA(testpng, 200, 200, 0, 0, 0, 0, alpha);
-      //  rend.drawImageA(colors, 0, 0, 0, 0, 0, 0, alpha);
-        //rend.drawImageFrame(frame, 30, 30, 30, 30, 0, 0, alpha);
+      //  bigcolors.imgResize(size);
+      //bigcolors.imgRotate(-theta);//20*3.14/180
+    //bigcolors.imgHue(0x22ffffff);
+       bigcolors.set_frame_number(f);
+       bigcolors.resizeNN(size);
+       bigcolors.rotate(theta);
+       bigcolors.addHue(0x80808080);
+        rend.drawSprite(bigcolors, x, y, 0, 0, 0, 0, alpha);
 
-       //rend.drawImageA(bigcolors, 0, 0, 0, 0, 0, 0, alpha);
-
-       // rend.drawRect(0, 0, rend.getWidth() - 1, rend.getHeight() - 1, 0xff0000);
 
         
-        rend.drawScreen();
+        //rend.drawScreen();
 
 
-        //UpdateWindow(hwnd);
+
 
     }
 
@@ -106,16 +105,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN: {
         switch (wParam) {
             case VK_LEFT:
-                x--;
+                //x -= 25;
+                f--;
                 break;
             case VK_RIGHT:
-                x++;
+                //x+=25;
+                f++;
+
                 break;
             case VK_UP:
-                y--;
+                y-=25;
                 break;
             case VK_DOWN:
-                y++;
+                y+=25;
                 break;
             case 'X':
                 if (alpha<0xff)
@@ -129,7 +131,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     size-=0.1;
                 break;
             case 'S':
-                if (size < 5.01)
+                if (size < 2.01)
                     size+=0.1;
                 break;
             default:

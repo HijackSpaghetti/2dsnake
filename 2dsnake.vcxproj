@@ -142,7 +142,8 @@
     <ClCompile Include="lib\lodepng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderer.cpp" />
-    <ClCompile Include="imageProc.cpp" />
+    <ClCompile Include="image.cpp" />
+    <ClCompile Include="sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lib\lodepng.h" />
