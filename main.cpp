@@ -79,8 +79,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     //bigcolors.imgHue(0x22ffffff);
        bigcolors.set_frame_number(f);
        bigcolors.resizeNN(size);
+       bigcolors.flipH();
+       bigcolors.flipV();
        bigcolors.rotate(theta);
-     // bigcolors.addHue(0x00000000);
+      bigcolors.addHue(0xffff0000);
         rend.drawSprite(bigcolors, x, y, 0, 0, 0, 0, alpha);
 
 

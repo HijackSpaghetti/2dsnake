@@ -16,9 +16,9 @@ private:
 	WINDOWINFO wi;			//windows info struct
 	void* content;//finalised content for StretchDiBit
 	void* output;
-	int cwidth=600;
-	int cheight=600;
-	//void* acontent;			//content with alphachannel
+	int cwidth=300;
+	int cheight=300;
+
 	int WindowX;            //X pos of the actual window, not the curses window
 	int WindowY;            //Y pos of the actual window, not the curses window
 	int windowTBorder;		//size of top border
@@ -76,7 +76,7 @@ public:
 		return cheight;
 	};
 
-	int stretchContent() {
+	int stretchContent() {//nearest neigbour content stretching for output
 		
 		uint32_t tsize = WindowWidth * WindowHeight * sizeof(unsigned int);
 		double x_ratio = cwidth / (double)WindowWidth;

@@ -199,8 +199,46 @@ public:
         refreshdefault(number);
         return 0;
     };
+    int flipV() {
+        void* bbuffer;//
+
+        bbuffer = VirtualAlloc(0, twidth*theight*4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        for (uint32_t xy = 0; xy < twidth*theight; xy++)
+        {
+            ((unsigned int*)bbuffer)[xy] = ((unsigned int*)buffer)[xy];
+        }
+        for (int y = 0; y < theight; y++) {
+            for (int x = 0; x < twidth; x++) {
 
 
+                ((unsigned int*)buffer)[(y * twidth) + x] = ((unsigned int*)bbuffer)[(y*twidth)+(twidth-x)];
+
+            }
+        }
+        VirtualFree(bbuffer, 0, MEM_RELEASE);
+        return 0;
+    };
+
+    int flipH() {
+        void* bbuffer;//
+
+        bbuffer = VirtualAlloc(0, twidth * theight * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        for (uint32_t xy = 0; xy < twidth * theight; xy++)
+        {
+            ((unsigned int*)bbuffer)[xy] = ((unsigned int*)buffer)[xy];
+        }
+        for (int y = 0; y < theight; y++) {
+            for (int x = 0; x < twidth; x++) {
+
+
+                ((unsigned int*)buffer)[(y * twidth) + x] = ((unsigned int*)bbuffer)[((theight*twidth)-(y * twidth)) + x];
+
+            }
+        }
+        VirtualFree(bbuffer, 0, MEM_RELEASE);
+        return 0;
+    };
+    
 
 
     int resize(double mul) {
