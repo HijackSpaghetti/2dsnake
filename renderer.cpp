@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "sprite.cpp"
 #include "clocker.cpp"
-//LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
+
 
 
 
@@ -34,6 +34,7 @@ public:
 	Renderer() {
 		//initialisation is in init();
 	}
+
 	int init(HINSTANCE hInstance, HWND hwnd, HDC hdc) {
 		WindowINST = hInstance;
 		WindowHandle = hwnd;
@@ -78,6 +79,12 @@ public:
 	};
 	int getHeight() {
 		return cheight;
+	};
+	int getWWidth() {
+		return WindowWidth;
+	};
+	int getWHeight() {
+		return WindowHeight;
 	};
 	int set_content_equal_output(){
 		content_equal_output = true;

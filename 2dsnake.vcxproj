@@ -144,6 +144,8 @@
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="clocker.cpp" />
+    <ClCompile Include="engine.h" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
