@@ -1,3 +1,6 @@
+#ifndef _IMAGE_
+#define _IMAGE_
+
 #include <iostream>
 #include <fstream>
 #include <windows.h>
@@ -19,7 +22,7 @@ private:
 
 
 public:
-    void* data;// data must contain pixel info in form of RRGGBBAA starting from top left corner
+    void* data=nullptr;// data must contain pixel info in form of RRGGBBAA starting from top left corner
     std::string path;
     image() {
         height = 0;
@@ -122,8 +125,8 @@ public:
         unsigned int lwidth, lheight;
         path = filename;
 
-        lodepng::decode(pngimg, lwidth, lheight, filename);
-
+       if(lodepng::decode(pngimg, lwidth, lheight, filename)!=0)
+           MessageBox(NULL, L"Error opening image file!", L"Error", MB_ICONEXCLAMATION | MB_OK);
         width = lwidth;
         height = lheight;
         img_size = width * height * 4;
@@ -171,3 +174,5 @@ public:
 
 
 };
+
+#endif

@@ -1,5 +1,10 @@
+#ifndef _SPRITE_
+#define _SPRITE_
+
 #include <vector>
 #include <math.h>
+#include <map>
+#include <sstream>
 #include "image.cpp"
 
 
@@ -14,6 +19,7 @@ private:
     uint32_t twidth;//width of transformed sprite
     uint32_t theight;//height of transformed sprite
     std::string path;//path to the original image
+    std::map<std::string, int> animationList;//putting i.e. "attack", getting strite number
     double size_mul;
     double angle;
     unsigned int hue;
@@ -35,76 +41,8 @@ private:
     };
 
 
-    int resize(int newWidth, int newHeight) {//bilinear interpolation resize
-        //todo: needs optimisation
+   
 
-
-        uint32_t tsize = newWidth * newHeight * 4;
-        twidth = newWidth;
-        theight = newHeight;
-        VirtualFree(buffer, 0, MEM_RELEASE);
-        buffer = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-
-
-
-
-
-
-        for (int y = 0; y < newHeight; y++) {
-            for (int x = 0; x < newWidth; x++) {
-
-
-                float gx = maxf(x / (float)(newWidth) * (width)-0.5f, width - 1);
-                float gy = maxf(y / (float)(newHeight) * (height)-0.5f, height - 2);
-                int gxi = (int)gx;
-                int gyi = (int)gy;
-                float gxd = gx - gxi;
-                float gyd = gy - gyi;
-                uint32_t result = 0;
-                byte c00[4], c10[4], c01[4], c11[4];
-                (*(unsigned int*)&c00) = ((unsigned int*)spritedata)[(sprite_size*current_frame)+(gyi * width) + gxi];
-
-                (*(unsigned int*)&c10) = ((unsigned int*)spritedata)[(sprite_size * current_frame)+(gyi * width) + gxi + 1];
-
-                (*(unsigned int*)&c01) = ((unsigned int*)spritedata)[(sprite_size * current_frame)+((gyi + 1) * width) + gxi];
-
-                (*(unsigned int*)&c11) = ((unsigned int*)spritedata)[(sprite_size * current_frame)+((gyi + 1) * width) + gxi + 1];
-
-                result |= blerp(c00[0], c10[0], c01[0], c11[0], gxd, gyd);
-                result |= blerp(c00[1], c10[1], c01[1], c11[1], gxd, gyd) << 8;
-                result |= blerp(c00[2], c10[2], c01[2], c11[2], gxd, gyd) << 16;
-                result |= blerp(c00[3], c10[3], c01[3], c11[3], gxd, gyd) << 24;
-                ((unsigned int*)buffer)[(y * newWidth) + x] = result;
-            }
-        }
-
-       
-        return 0;
-    };
-
-    int resizeNN(int newWidth, int newHeight) {//nearest neighbor resize
-
-        uint32_t tsize = newWidth * newHeight * 4;
-        double x_ratio = width / (double)newWidth;
-        double y_ratio = height / (double)newHeight;
-        VirtualFree(buffer, 0, MEM_RELEASE);
-        buffer = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        int px, py;
-        for (int y = 0; y < newHeight; y++) {
-            for (int x = 0; x < newWidth; x++) {
-
-
-                px = (int)(x * x_ratio);
-                py = (int)(y * y_ratio);
-                ((unsigned int*)buffer)[(y * newWidth) + x] = ((unsigned int*)spritedata)[(sprite_size * current_frame)+(py * width) + px];
-               
-            }
-        }
-        twidth = newWidth;
-        theight = newHeight;
-      
-        return 0;
-    };
 public:
     void* spritedata;// data must contain pixel info in form of RRGGBBAA starting from top left corner
     void* buffer;
@@ -116,15 +54,18 @@ public:
         number_of_sprites = 1;
         sprite_size = width * height;
         spritedata=VirtualAlloc(0, (sprite_size*4), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
         for (int xy = 0; xy < width * height; xy++)
         {
             ((unsigned int*)spritedata)[xy] = ((unsigned int*)imagedata)[xy];
+
         }
         path = img.path;
         size_mul = 1;
         current_frame = 0;
         angle = 0;
         hue = 0x00000000;
+        refreshdefault(0);
     };
     sprite(image img, int fwidth, int fheight, int xdistance, int ydistance,int xoffset, int yoffset) {//cutting image to sprites of given dimension, basically just a rearranging of pixels, x-y-offsets are coordinates of beginning
         void* imagedata = img.getImage();
@@ -156,8 +97,48 @@ public:
         angle = 0;
         hue = 0x00000000;
         current_frame = 0;
+        refreshdefault(0);
     };
+    int mapAnimation(std::string tstring) {
 
+
+        std::istringstream iss(tstring);
+     
+        std::string parts;
+        int mapping = 0;
+        while (std::getline(iss, parts,';')) {
+            animationList[parts] = mapping;
+            mapping++;
+        }
+        return 0;
+    
+    };
+    int setFrame(std::string tstring) {
+    
+        set_frame_number(animationList[tstring]);
+
+
+
+        return 0;
+    };
+    
+    int setFrame(char c) {
+        std::string str{c};
+        set_frame_number(animationList[str]);
+
+
+
+        return 0;
+    };
+    int animate(std::string tstring) {
+  
+        //todo: iterate sprite list here, depending on animation sheet
+        set_frame_number(animationList[tstring]);
+
+
+
+        return 0;
+    };
     int free() {
 
 
@@ -173,10 +154,13 @@ public:
         buffer = VirtualAlloc(0, sprite_size*4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         theight = height;
         twidth = width;
-        for (uint32_t xy = 0; xy<sprite_size; xy++)
-        {
-            ((unsigned int*)buffer)[xy] = ((unsigned int*)spritedata)[(sprite_size * current_frame)+xy];
+        if (number < number_of_sprites) {
+            for (uint32_t xy = 0; xy < sprite_size; xy++)
+            {
+                ((unsigned int*)buffer)[xy] = ((unsigned int*)spritedata)[(sprite_size * current_frame) + xy];
+            }
         }
+       
         return 0;
     };
     void* getSprite() {//this should prepare buffer of transformed sprite of given number and return it. 
@@ -196,6 +180,8 @@ public:
     int set_frame_number(int number) {
         if (number < number_of_sprites)
             current_frame = number;
+
+
         refreshdefault(number);
         return 0;
     };
@@ -239,8 +225,161 @@ public:
         return 0;
     };
     
+    int resizeOrigin(int newWidth, int newHeight) {//bilinear interpolation resize
+       //todo: needs optimisation
 
 
+        uint32_t tsize = newWidth * newHeight * 4;
+        twidth = newWidth;
+        theight = newHeight;
+        VirtualFree(buffer, 0, MEM_RELEASE);
+        buffer = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+
+
+
+
+
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+
+
+                float gx = maxf(x / (float)(newWidth) * (width)-0.5f, width - 1);
+                float gy = maxf(y / (float)(newHeight) * (height)-0.5f, height - 2);
+                int gxi = (int)gx;
+                int gyi = (int)gy;
+                float gxd = gx - gxi;
+                float gyd = gy - gyi;
+                uint32_t result = 0;
+                byte c00[4], c10[4], c01[4], c11[4];
+                (*(unsigned int*)&c00) = ((unsigned int*)spritedata)[(sprite_size * current_frame) + (gyi * width) + gxi];
+
+                (*(unsigned int*)&c10) = ((unsigned int*)spritedata)[(sprite_size * current_frame) + (gyi * width) + gxi + 1];
+
+                (*(unsigned int*)&c01) = ((unsigned int*)spritedata)[(sprite_size * current_frame) + ((gyi + 1) * width) + gxi];
+
+                (*(unsigned int*)&c11) = ((unsigned int*)spritedata)[(sprite_size * current_frame) + ((gyi + 1) * width) + gxi + 1];
+
+                result |= blerp(c00[0], c10[0], c01[0], c11[0], gxd, gyd);
+                result |= blerp(c00[1], c10[1], c01[1], c11[1], gxd, gyd) << 8;
+                result |= blerp(c00[2], c10[2], c01[2], c11[2], gxd, gyd) << 16;
+                result |= blerp(c00[3], c10[3], c01[3], c11[3], gxd, gyd) << 24;
+                ((unsigned int*)buffer)[(y * newWidth) + x] = result;
+            }
+        }
+
+
+        return 0;
+    };
+
+    int resizeNNOrigin(int newWidth, int newHeight) {//nearest neighbor resize
+
+        uint32_t tsize = newWidth * newHeight * 4;
+        double x_ratio = width / (double)newWidth;
+        double y_ratio = height / (double)newHeight;
+        VirtualFree(buffer, 0, MEM_RELEASE);
+        buffer = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        int px, py;
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+
+
+                px = (int)(x * x_ratio);
+                py = (int)(y * y_ratio);
+                ((unsigned int*)buffer)[(y * newWidth) + x] = ((unsigned int*)spritedata)[(sprite_size * current_frame) + (py * width) + px];
+
+            }
+        }
+        twidth = newWidth;
+        theight = newHeight;
+
+        return 0;
+    };
+    int resize(int newWidth, int newHeight) {//bilinear interpolation resize
+        //todo: needs optimisation
+        void* resulta;
+
+        uint32_t tsize = newWidth * newHeight * 4;
+        resulta = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+
+
+
+
+
+
+
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+
+
+                float gx = maxf(x / (float)(newWidth) * (twidth)-0.5f, twidth - 1);
+                float gy = maxf(y / (float)(newHeight) * (theight)-0.5f, theight - 2);
+                int gxi = (int)gx;
+                int gyi = (int)gy;
+                float gxd = gx - gxi;
+                float gyd = gy - gyi;
+                uint32_t result = 0;
+                byte c00[4], c10[4], c01[4], c11[4];
+                (*(unsigned int*)&c00) = ((unsigned int*)buffer)[(gyi * twidth) + gxi];
+
+                (*(unsigned int*)&c10) = ((unsigned int*)buffer)[(gyi * twidth) + gxi + 1];
+
+                (*(unsigned int*)&c01) = ((unsigned int*)buffer)[((gyi + 1) * twidth) + gxi];
+
+                (*(unsigned int*)&c11) = ((unsigned int*)buffer)[((gyi + 1) * twidth) + gxi + 1];
+
+                result |= blerp(c00[0], c10[0], c01[0], c11[0], gxd, gyd);
+                result |= blerp(c00[1], c10[1], c01[1], c11[1], gxd, gyd) << 8;
+                result |= blerp(c00[2], c10[2], c01[2], c11[2], gxd, gyd) << 16;
+                result |= blerp(c00[3], c10[3], c01[3], c11[3], gxd, gyd) << 24;
+                ((unsigned int*)resulta)[(y * newWidth) + x] = result;
+            }
+        }
+        twidth = newWidth;
+        theight = newHeight;
+        VirtualFree(buffer, 0, MEM_RELEASE);
+        buffer = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        for (int xy = 0; xy < twidth * theight; xy++)
+        {
+            ((unsigned int*)buffer)[xy] = ((unsigned int*)resulta)[xy];
+        }
+        VirtualFree(resulta, 0, MEM_RELEASE);
+
+
+        return 0;
+    };
+
+    int resizeNN(int newWidth, int newHeight) {//nearest neighbor resize
+        void* result;
+
+        uint32_t tsize = newWidth * newHeight * 4;
+        result = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        double x_ratio = twidth / (double)newWidth;
+        double y_ratio = theight / (double)newHeight;
+
+        int px, py;
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+
+
+                px = (int)(x * x_ratio);
+                py = (int)(y * y_ratio);
+                ((unsigned int*)result)[(y * newWidth) + x] = ((unsigned int*)buffer)[(py * twidth) + px];
+
+            }
+        }
+        twidth = newWidth;
+        theight = newHeight;
+        VirtualFree(buffer, 0, MEM_RELEASE);
+        buffer = VirtualAlloc(0, tsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        for (int xy = 0; xy < twidth * theight; xy++)
+        {
+            ((unsigned int*)buffer)[xy] = ((unsigned int*)result)[xy];
+        }
+        VirtualFree(result, 0, MEM_RELEASE);
+        return 0;
+    };
     int resize(double mul) {
         size_mul = mul;
         int cx = width * mul, cy = height * mul;
@@ -300,7 +439,7 @@ public:
 
         result = VirtualAlloc(0, result_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
-        int x1, y1, x2, y2;
+
         int yca = newheight / 2, xca = newwidth / 2;
         uint32_t value;
         for (int y = 0; y < newheight; y++) {
@@ -376,3 +515,4 @@ public:
 
 
 };
+#endif

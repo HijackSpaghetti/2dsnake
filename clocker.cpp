@@ -1,9 +1,12 @@
+#ifndef _CLOCKER_
+#define _CLOCKER_
+
 #include <windows.h>
 
 
 class clocker {
 private:
-	DWORD	lastclock;
+	ULONGLONG	lastclock;
 
 
 
@@ -26,3 +29,5 @@ public:
 
 
 };
+
+#endif

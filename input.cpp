@@ -1,8 +1,13 @@
+#ifndef _INPUT_
+#define _INPUT_
+
 #include <windows.h>
 class input {
 private:
 	bool keyCurrState[255] = {0};
 	bool keyPrevState[255] = {0};
+	bool mouseCurrState[5] = { 0 };
+	bool mousePrevState[5] = { 0 };
 	struct keyState
 	{
 		bool pressed=false;
@@ -10,20 +15,21 @@ private:
 		bool down = false;
 	};
 	keyState keyboard[255];
+	keyState mouse[5];
 
 	struct mousePosition {
 		int x = 0;
 		int y = 0;
-	} mousePos;
-	
+	} mousePos, mouseContentPos;
+	int widthC = 0, heightC = 0, widthW = 0,heightW=0;
 
 
 public:
 	enum key {
-		LMB = 0x01,
-		RMB = 0x02,//	Right mouse button
+		LMBK= 0x01,
+		RMBK = 0x02,//	Right mouse button
 		BREAK = 0x03,//	Control - break processing
-		MMB = 0x04,//	Middle mouse button(three - button mouse)
+		MMBK = 0x04,//	Middle mouse button(three - button mouse)
 		X1MB = 0x05,//	X1 mouse button
 		X2MB = 0x06,//	X2 mouse button
 
@@ -158,7 +164,8 @@ public:
 
 
 	};
-	void update() {
+	enum button {LMB=1,RMB=2,MMB=3,X1=4,X2=5};
+	void update(int WWidth, int WHeight, int cwidth, int cheight) {
 		for (int i = 0; i < 255; i++)
 		{
 			keyboard[i].pressed = false;
@@ -180,13 +187,44 @@ public:
 			}
 
 		}
-		
+		for (int i = 0; i < 5; i++)
+		{
+			mouse[i].pressed = false;
+			mouse[i].released = false;
+			if (mouseCurrState[i] != mousePrevState[i])
+			{
+				if (mouseCurrState[i])
+				{
+					mouse[i].pressed = !mouse[i].down;
+					mouse[i].down = true;
+				}
+				else
+				{
+					mouse[i].released = true;
+					mouse[i].down = false;
+
+				}
+				mousePrevState[i] = mouseCurrState[i];
+			}
+
+		}
+
+
+		widthC = cwidth;
+		heightC = cheight;
+		widthW = WWidth;
+		heightW = WHeight;
+		mouseContentPos.x = (int)(((float)mousePos.x / (float)widthW * (float)widthC));
+		mouseContentPos.y = (int)(((float)mousePos.y / (float)heightW * (float)heightC));
 	};
 	void updateKEY(int key, bool state) {
 		keyCurrState[key] = state;
 
 	};
+	void updatemKEY(int key, bool state) {
+		mouseCurrState[key] = state;
 
+	};
 	keyState KEYState(key one) {
 		return keyboard[one];
 	
@@ -194,18 +232,35 @@ public:
 	bool isKeyDown(key one) {
 		return keyboard[one].down;
 	};
+	bool isKeyPressed(key one) {
+		return keyboard[one].pressed;
+	};
+	bool isKeyReleased(key one) {
+		return keyboard[one].released;
+	};
+	bool isMBDown(button one) {
+		return mouse[one].down;
+	};
+	bool isMBPressed(button one) {
+		return mouse[one].pressed;
+	};
+	bool isMBReleased(button one) {
+		return mouse[one].released;
+	};
 	void updateMousePos(LPARAM lowW) {
 		mousePos.x = LOWORD(lowW), mousePos.y = HIWORD(lowW);//needs to be clamped to content size
 	}
-	mousePosition getMousePos() {
+	mousePosition getWMousePos() {
 		return mousePos;
 	};
-	mousePosition getMousePos(int WWidth, int WHeight, int cwidth, int cheight) {
-		mousePosition p;
-		p.x = (int)(((float)mousePos.x / (float)WWidth * (float)cwidth));
-		p.y = (int)(((float)mousePos.y / (float)WHeight * (float)cheight));
-		return p;
-	
+		mousePosition getMousePos() {
+
+
+			return mouseContentPos;
 	}
 
+
+
 };
+
+#endif
