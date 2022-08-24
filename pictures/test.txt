@@ -1,7 +1,7 @@
 ANIM%
 PARAM:100:100:0:0:0:0%
-SPRT:sprite1:sprite2:sprite3:sprite4:sprite5:sprite6:sprite7:sprite8:sprite9%
+SPRT:idle:lopen:bopen%
 ANIMHEADER%
-Animation1:sprite1:sprite2:sprite3%
-Animation2:sprite1:sprite4:sprite5%
-Animation3:sprite6:sprite1:sprite9:sprite8:sprite1%
+IDLE:idle:idle:idle:idle:idle:idle:lopen%
+AM:idle:lopen:bopen:lopen%
+HE:idle:idle:idle:bopen:lopen%

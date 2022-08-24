@@ -8,6 +8,7 @@
 #include "image.cpp"
 
 
+
 class sprite {
 private:
 
@@ -67,6 +68,64 @@ public:
         hue = 0x00000000;
         refreshdefault(0);
     };
+    sprite(image img, std::map<std::string, sprite*>& collection) {//counting this as singular big sprite
+        void* imagedata = img.getImage();
+        width = img.getImageWidth();
+        height = img.getImageHeight();
+        number_of_sprites = 1;
+        sprite_size = width * height;
+        collection[img.path] = this;
+        spritedata = VirtualAlloc(0, (sprite_size * 4), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+        for (int xy = 0; xy < width * height; xy++)
+        {
+            ((unsigned int*)spritedata)[xy] = ((unsigned int*)imagedata)[xy];
+
+        }
+        path = img.path;
+        size_mul = 1;
+        current_frame = 0;
+        angle = 0;
+        hue = 0x00000000;
+        refreshdefault(0);
+    };
+    sprite(const char* filename, std::map<std::string, sprite*>& collection) {//counting this as singular big sprite
+        image img;
+        size_t fnsize = strlen(filename);
+        std::string cstring = std::string(filename);
+        std::string exp;
+        std::copy(cstring.end() - 3, cstring.end(), std::back_inserter(exp));
+        if (exp == "bmp")
+            img.loadBMP(filename);
+        else
+            if (exp == "png")
+                img.loadPNG(filename);
+            else
+                return;
+        void* imagedata = img.getImage();
+        width = img.getImageWidth();
+        height = img.getImageHeight();
+        collection[img.path] = this;
+        number_of_sprites = 1;
+        sprite_size = width * height;
+        spritedata = VirtualAlloc(0, (sprite_size * 4), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+        for (int xy = 0; xy < width * height; xy++)
+        {
+            ((unsigned int*)spritedata)[xy] = ((unsigned int*)imagedata)[xy];
+
+        }
+        path = img.path;
+        img.free();
+        size_mul = 1;
+        current_frame = 0;
+        angle = 0;
+        hue = 0x00000000;
+        refreshdefault(0);
+    };
+
+
+
     sprite(image img, int fwidth, int fheight, int xdistance, int ydistance,int xoffset, int yoffset, std::map<std::string, sprite*> &collection) {//cutting image to sprites of given dimension, basically just a rearranging of pixels, x-y-offsets are coordinates of beginning
         void* imagedata = img.getImage();
         width = fwidth;

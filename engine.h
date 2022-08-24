@@ -51,7 +51,7 @@
             createWindow();//it just works
             image dot, owl, testpng, frame, colors, yablochko2;
             MSG msg = { };
-            animation test;
+            animation test(rend), test2(rend);
             running = true;
             dot.loadBMP("pictures/dot.bmp");
             //owl.loadBMP("pictures/owl.bmp");
@@ -62,14 +62,16 @@
             
             //bigcolors.imgResize(x, y);
             sprite bigcolors(colors, 20, 20, 0, 0, 0, 0, spriteCollection);
-            sprite yablochko(yablochko2);
+            sprite tests("pictures/yablochko.png",spriteCollection);
+            sprite yablochko(yablochko2, spriteCollection);
             textfield text("Hello world", textfield::RW::WRITE, bigcolors, in);
-            sprite dots(dot);
+            sprite dots(dot, spriteCollection);
             sprite frame2(frame, 46, 82, 2, 0, 2, 0, spriteCollection);
             test.getAnimationsListFromFile("pictures/test.txt", spriteCollection, "pictures/snek.png");
+            test2.getAnimationsListFromFile("pictures/test.txt", spriteCollection, "pictures/snek.png");
             // bigcolors.imgRotate(0);
             //f = 0;int linput;
-
+            ULONGLONG elapsedmillis;
             int x = 50, y = 50;
             byte alpha = 0;
             double size = 0.8;
@@ -87,6 +89,9 @@
             str = "Elapsed ms: " + std::to_string(tmr_1.millis());
             text.put(str);
             text.hide();
+            test.animate("IDLE");
+            test2.animate("IDLE");
+            test2.position(100, 100);
             while (running) {
 
                 //input    
@@ -95,7 +100,7 @@
                 DispatchMessage(&msg);
 
                 //simulate
-
+                elapsedmillis = GetTickCount64();
                 if (in.KEYState(input::key::ESC).down)
                     running = false;
 
@@ -118,11 +123,11 @@
                   //bigcolors.imgRotate(-theta);//20*3.14/180
                 //bigcolors.imgHue(0x22ffffff);
                     if (in.isKeyDown(input::key::UP))
-                        y--;
+                    test.animate("IDLE");
                     if (in.isKeyDown(input::key::LEFT))
-                        x--;
+                        test.animateOnce("AM");
                     if (in.isKeyDown(input::key::RIGHT))
-                        x++;
+                        test.animateOnce("HE");
                     if (in.isKeyDown(input::key::DOWN))
                         y++;
                     if (in.isKeyPressed(input::key::S))
@@ -175,18 +180,21 @@
                     // rend.drawSprite(dots, in.getMousePos().x, in.getMousePos().y, 0, 0, 0, 0, alpha);
                      //bigcolors.set_frame_number(f);
                    frame2.set_frame_number(f);
-                   frame2.resizeNN(size);
+                   //frame2.resizeNN(size);
                    yablochko.resizeNN(5);
                  //  frame2.resize(size);//billinear interpolation bug, fix fix fix
                    // bigcolors.resize(size);
                     //  bigcolors.flipH(); yabloko tolika
                     //  bigcolors.flipV();
                    frame2.rotate(theta);
-                   //bigcolors.addHue(0xffff0000);
-
-                   rend.drawSprite(yablochko, applex, appley, 0, 0, 0, 0, alpha);
-                  // rend.drawSprite(bigcolors, x, y, 0, 0, 0, 0, alpha);
                    rend.drawSprite(frame2, x, y, 0, 0, 0, 0, alpha);
+                   //bigcolors.addHue(0xffff0000);
+                   
+                   rend.drawSprite(yablochko, applex, appley, 0, 0, 0, 0, alpha);
+                  // rend.drawSprite(tests, applex, appley, 0, 0, 0, 0, alpha);
+                  // rend.drawSprite(bigcolors, x, y, 0, 0, 0, 0, alpha);
+                   test.animate(elapsedmillis);
+                   test2.animate(elapsedmillis);
                     rend.drawScreen();
                     tmr_1.refresh();
                 }

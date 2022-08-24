@@ -414,8 +414,7 @@
 
 			};
 
-
-			int drawImageFrame(image img, int xdest, int ydest, int framewidth, int frameheight, int frameXpos, int frameYpos, byte subalpha) {
+	int drawImageFrame(image img, int xdest, int ydest, int framewidth, int frameheight, int frameXpos, int frameYpos, byte subalpha) {
 
 				int sourceX = framewidth * frameXpos;
 				int sourceY = frameheight * frameYpos;
@@ -441,7 +440,7 @@
 				return 0;
 
 			};
-
+			
 
 			int drawSprite(sprite img, int xdest, int ydest, int xsource, int ysource, int sourcewidth, int sourceheight, byte subalpha) {//centered
 

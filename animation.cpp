@@ -23,15 +23,21 @@ we need this class because we would only have one sprite but can have multiple a
 #include <fstream>
 #include <vector>
 #include "sprite.cpp"
+#include "renderer.cpp"
 
 
-class animation{
+class animation {
 private:
 	std::map<std::string, int> spriteList;
 	std::map<std::string, std::vector<int>> AnimationList;
 	sprite* sprited;
-
+	Renderer rend;
+	bool once = {false};
+	unsigned int last_time, cycletime = { 500 }, current_frame = { 0 }, maxframes = { 0 };
+	std::string currentAnimation="", nextAnimation="";
+	int xpos = { 0 }, ypos = {0};
 	int framewidth, frameheight, xdistancebetweensprites, ydistancebetweensprites, xstartoffset, ystartoffset;
+	double sizeS = { 1 }, angle = { 0 };
 	std::vector<std::string> split(const std::string& s, char delim) {
 		std::vector<std::string> result;
 		std::stringstream ss(s);
@@ -45,6 +51,12 @@ private:
 	}
 
 public:
+	animation(Renderer &render) {
+		rend = render;
+	
+	
+	};
+
 	int getAnimationsListFromFile(const char* filename, std::map<std::string, sprite*> collection, const char* spritename){
 		std::string path;
 		path = filename;
@@ -115,6 +127,71 @@ public:
 		return 0;
 	}
 	
+	void animate(ULONGLONG etime) {
+	
+		
+			if (AnimationList.count(nextAnimation) == 0)
+				return;
+
+			if ((AnimationList.count(currentAnimation) == 0)) {
+				currentAnimation = nextAnimation;
+				maxframes = AnimationList[currentAnimation].size() - 1;
+				current_frame = 0;
+
+			}
+
+
+
+			sprited->set_frame_number(AnimationList[currentAnimation].at(current_frame));
+
+
+
+			if (sizeS != 1)
+				sprited->resizeNN(sizeS);
+			if (angle != 0)
+				sprited->rotate(angle);
+
+			rend.drawSpriteA(*sprited, xpos, ypos, 0, 0, 0, 0, 0);
+			if (etime - last_time > cycletime) {
+			if (current_frame >= maxframes)
+			{
+				currentAnimation = nextAnimation;
+				maxframes = AnimationList[currentAnimation].size() - 1;
+				current_frame = 0;
+				if (once) {
+					nextAnimation = "IDLE";
+					once = false;
+				}
+			}
+			if (current_frame <= maxframes)
+				current_frame++;
+
+			if (current_frame > maxframes)
+				current_frame = 0;
+			last_time = etime;
+		}
+	}
+
+	void asize(double i) {
+		sizeS = i;
+	}
+	void arotate(double theta) {
+		angle = theta;
+	
+	}
+	void position(int x, int y) {
+		xpos = x;
+		ypos = y;
+	}
+	void animate(std::string tstring) {
+		nextAnimation = tstring;
+		
+	};
+	void animateOnce(std::string tstring) {
+		nextAnimation = tstring;
+		once = true;
+
+	};
 
 };
 
