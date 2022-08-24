@@ -67,10 +67,11 @@ public:
         hue = 0x00000000;
         refreshdefault(0);
     };
-    sprite(image img, int fwidth, int fheight, int xdistance, int ydistance,int xoffset, int yoffset) {//cutting image to sprites of given dimension, basically just a rearranging of pixels, x-y-offsets are coordinates of beginning
+    sprite(image img, int fwidth, int fheight, int xdistance, int ydistance,int xoffset, int yoffset, std::map<std::string, sprite*> &collection) {//cutting image to sprites of given dimension, basically just a rearranging of pixels, x-y-offsets are coordinates of beginning
         void* imagedata = img.getImage();
         width = fwidth;
         height = fheight;
+        collection[img.path] = this;
         sprite_size = width * height;
         int sourceheight=img.getImageHeight(), sourcewidth= img.getImageWidth();
         int x_frames = ((img.getImageWidth() - xoffset) / (width + xdistance)), y_frames = ((img.getImageHeight() - yoffset) / (height + ydistance));//calculating how many frames are in given image
@@ -99,6 +100,9 @@ public:
         current_frame = 0;
         refreshdefault(0);
     };
+
+
+
     int mapAnimation(std::string tstring) {
 
 

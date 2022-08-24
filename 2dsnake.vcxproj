@@ -179,6 +179,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="animation.cpp" />
     <ClCompile Include="lib\lodepng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />

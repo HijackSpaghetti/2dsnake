@@ -1,0 +1,7 @@
+ANIM%
+PARAM:100:100:0:0:0:0%
+SPRT:sprite1:sprite2:sprite3:sprite4:sprite5:sprite6:sprite7:sprite8:sprite9%
+ANIMHEADER%
+Animation1:sprite1:sprite2:sprite3%
+Animation2:sprite1:sprite4:sprite5%
+Animation3:sprite6:sprite1:sprite9:sprite8:sprite1%

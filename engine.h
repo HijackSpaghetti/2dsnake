@@ -5,11 +5,12 @@
 #include "renderer.cpp"
 #include "input.cpp"
 #include "textfield.cpp"
+#include "animation.cpp"
 
 
 
 
-
+    static std::map<std::string, sprite*> spriteCollection;
     static BOOL running;
     static Renderer rend;
     static input in;
@@ -47,9 +48,10 @@
 
 
         int start() {
-            createWindow();
+            createWindow();//it just works
             image dot, owl, testpng, frame, colors, yablochko2;
             MSG msg = { };
+            animation test;
             running = true;
             dot.loadBMP("pictures/dot.bmp");
             //owl.loadBMP("pictures/owl.bmp");
@@ -57,12 +59,14 @@
             frame.loadPNG("pictures/snek.png");
             yablochko2.loadPNG("pictures/yablochko.png");
             colors.loadPNG("pictures/x05mb.png");
+            
             //bigcolors.imgResize(x, y);
-            sprite bigcolors(colors, 20, 20, 0, 0, 0, 0);
+            sprite bigcolors(colors, 20, 20, 0, 0, 0, 0, spriteCollection);
             sprite yablochko(yablochko2);
             textfield text("Hello world", textfield::RW::WRITE, bigcolors, in);
             sprite dots(dot);
-            sprite frame2(frame, 46, 82, 2, 0, 2, 0);
+            sprite frame2(frame, 46, 82, 2, 0, 2, 0, spriteCollection);
+            test.getAnimationsListFromFile("pictures/test.txt", spriteCollection, "pictures/snek.png");
             // bigcolors.imgRotate(0);
             //f = 0;int linput;
 
@@ -82,6 +86,7 @@
             std::string str="";
             str = "Elapsed ms: " + std::to_string(tmr_1.millis());
             text.put(str);
+            text.hide();
             while (running) {
 
                 //input    
@@ -152,15 +157,19 @@
                         draw = true;
                     }
                     if (draw == true)
-                        rend.drawLine(x1, y1, x2, y2, 0xFF00FFFF);
-
-                    if (in.isKeyPressed(input::key::T))
-                        text.activate();
-
-
+                        rend.drawLine(x1, y1, x2, y2, 0xFF00FFFF);    
                     text.call();
+                    if (in.isKeyPressed(input::key::T))
+                    {
+                        text.show();
+                        text.activate();
+                    }
+
+
+
                     //text.setposition(in.getMousePos().x, in.getMousePos().y);
                     text.draw(rend);
+
                   //  dots.set_frame_number(0);
                   //  dots.resizeNN(3);
                     // rend.drawSprite(dots, in.getMousePos().x, in.getMousePos().y, 0, 0, 0, 0, alpha);
