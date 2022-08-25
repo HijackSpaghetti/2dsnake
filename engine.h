@@ -96,10 +96,19 @@
             test2.position(100, 100);
             ECS tecs;
             entity& snek(tecs.addEntity());  
-            snek.addComponent<PositionComponent>(20, 20);
-            snek.addComponent<MovementComponent>();
-            snek.deleteComponent<MovementComponent>();
-            tecs.update();
+            snek.addComponent<PositionComponent>(155, 20);
+            snek.addComponent<AnimationComponent>(rend);
+            snek.addComponent<InputComponent>(in);
+            snek.getComponent<AnimationComponent>().setupFromFile("pictures/test.txt", spriteCollection, "pictures/snek.png");
+            snek.getComponent<AnimationComponent>().nextAnim("HE");
+           // snek.getComponent<AnimationComponent>().addhue(0x9900FF00);
+            snek.getComponent<AnimationComponent>().transparency(89);
+            entity& snek2(tecs.addEntity());
+            snek2.addComponent<PositionComponent>(20, 155);
+            snek2.addComponent<AnimationComponent>(rend);
+            
+            snek2.getComponent<AnimationComponent>().setupFromFile("pictures/test.txt", spriteCollection, "pictures/snek.png");
+            snek2.getComponent<AnimationComponent>().nextAnim("IDLE");
             while (running) {
 
                 //input    
@@ -108,7 +117,7 @@
                 DispatchMessage(&msg);
 
                 //simulate
-                elapsedmillis = GetTickCount64();
+              //  elapsedmillis = GetTickCount64();
                 if (in.KEYState(input::key::ESC).down)
                     running = false;
 
@@ -124,85 +133,86 @@
                     rend.fillAll(0x000000ff); //fill opaque black 
 
                      //rend.drawPoint(, 0xff0000);
-                    rend.drawLine(0, 0, 299, 299, 0xff0000);
+                 //   rend.drawLine(0, 0, 299, 299, 0xff0000);
                   //  rend.fillRect(20, 20, 550, 550, 0xff0000);
                    // rend.drawImage(owl, 0, 0, 0, 0);
                     
                   //bigcolors.imgRotate(-theta);//20*3.14/180
                 //bigcolors.imgHue(0x22ffffff);
-                    if (in.isKeyDown(input::key::UP))
-                    test.animate("IDLE");
-                    if (in.isKeyDown(input::key::LEFT))
-                        test.animateOnce("AM");
-                    if (in.isKeyDown(input::key::RIGHT))
-                        test.animateOnce("HE");
-                    if (in.isKeyDown(input::key::DOWN))
-                        y++;
-                    if (in.isKeyPressed(input::key::S))
-                        f++;
-                    if (in.isKeyPressed(input::key::A))
-                        f--;
-                    if (in.isKeyPressed(input::key::X))
-                        size += 0.1;
-                    if (in.isKeyPressed(input::key::Z))
-                        size -= 0.1;
-                    if (in.isKeyDown(input::key::W))
-                        theta += 0.1;
-                    if (in.isKeyDown(input::key::Q))
-                        theta -= 0.1;
-                    if (in.isMBPressed(input::button::LMB))
-                    {
-                        applex=x1 = in.getMousePos().x, appley=y1 = in.getMousePos().y;
+                   // if (in.isKeyDown(input::key::UP))
+                    //test.animate("IDLE");
+                    //if (in.isKeyDown(input::key::LEFT))
+                      //  test.animateOnce("AM");
+                    //if (in.isKeyDown(input::key::RIGHT))
+                      //  test.animateOnce("HE");
+                    //if (in.isKeyDown(input::key::DOWN))
+                     //   y++;
+                    //if (in.isKeyPressed(input::key::S))
+                      //  f++;
+                    //if (in.isKeyPressed(input::key::A))
+                      //  f--;
+                    //if (in.isKeyPressed(input::key::X))
+                     //   size += 0.1;
+                    //if (in.isKeyPressed(input::key::Z))
+                    //    size -= 0.1;
+                    //if (in.isKeyDown(input::key::W))
+                    //    theta += 0.1;
+                   // if (in.isKeyDown(input::key::Q))
+                     //   theta -= 0.1;
+                    //if (in.isMBPressed(input::button::LMB))
+                    //{
+                     //   applex=x1 = in.getMousePos().x, appley=y1 = in.getMousePos().y;
 
-                        draw = false;
-                    }
-                    if (in.isMBDown(input::button::LMB))
-                    {
-                        x2 = in.getMousePos().x;
-                        y2 = in.getMousePos().y;
-                        rend.drawLine(x1, y1, in.getMousePos().x, in.getMousePos().y, 0xFF00FFFF);
+                      //  draw = false;
+                   // }
+                    //if (in.isMBDown(input::button::LMB))
+                    //{
+                     //   x2 = in.getMousePos().x;
+                      //  y2 = in.getMousePos().y;
+                      //  rend.drawLine(x1, y1, in.getMousePos().x, in.getMousePos().y, 0xFF00FFFF);
 
-                    }
-                    if (in.isMBReleased(input::button::LMB))
-                    {
-                        x2 = in.getMousePos().x;
-                        y2 = in.getMousePos().y;
-                        draw = true;
-                    }
-                    if (draw == true)
-                        rend.drawLine(x1, y1, x2, y2, 0xFF00FFFF);    
-                    text.call();
-                    if (in.isKeyPressed(input::key::T))
-                    {
-                        text.show();
-                        text.activate();
-                    }
-
+                    //}
+                    //if (in.isMBReleased(input::button::LMB))
+                    //{
+                     //   x2 = in.getMousePos().x;
+                     //   y2 = in.getMousePos().y;
+                  ///      draw = true;
+                   // }
+                    ///if (draw == true)
+                     ///   rend.drawLine(x1, y1, x2, y2, 0xFF00FFFF);    
+                    ///text.call();
+                    //if (in.isKeyPressed(input::key::T))
+                   // {
+                    //    text.show();
+                    //    text.activate();
+                    //}
+                
 
 
                     //text.setposition(in.getMousePos().x, in.getMousePos().y);
-                    text.draw(rend);
-
+//                    text.draw(rend);
+                    tecs.update();
+                    tecs.draw();
                   //  dots.set_frame_number(0);
                   //  dots.resizeNN(3);
                     // rend.drawSprite(dots, in.getMousePos().x, in.getMousePos().y, 0, 0, 0, 0, alpha);
                      //bigcolors.set_frame_number(f);
-                   frame2.set_frame_number(f);
+                //   frame2.set_frame_number(f);
                    //frame2.resizeNN(size);
-                   yablochko.resizeNN(5);
+                //   yablochko.resizeNN(5);
                  //  frame2.resize(size);//billinear interpolation bug, fix fix fix
                    // bigcolors.resize(size);
                     //  bigcolors.flipH(); yabloko tolika
                     //  bigcolors.flipV();
-                   frame2.rotate(theta);
-                   rend.drawSprite(frame2, x, y, 0, 0, 0, 0, alpha);
+                  // frame2.rotate(theta);
+                 //  rend.drawSprite(frame2, x, y, 0, 0, 0, 0, alpha);
                    //bigcolors.addHue(0xffff0000);
                    
-                   rend.drawSprite(yablochko, applex, appley, 0, 0, 0, 0, alpha);
+                 //  rend.drawSprite(yablochko, applex, appley, 0, 0, 0, 0, alpha);
                   // rend.drawSprite(tests, applex, appley, 0, 0, 0, 0, alpha);
                   // rend.drawSprite(bigcolors, x, y, 0, 0, 0, 0, alpha);
-                   test.animate(elapsedmillis);
-                   test2.animate(elapsedmillis);
+                  // test.animate(elapsedmillis);
+                   //test2.animate(elapsedmillis);
                     rend.drawScreen();
                     tmr_1.refresh();
                 }

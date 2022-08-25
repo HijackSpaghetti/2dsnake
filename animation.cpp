@@ -32,10 +32,12 @@ private:
 	std::map<std::string, std::vector<int>> AnimationList;
 	sprite* sprited;
 	Renderer rend;
-	bool once = {false};
+	bool once = { false };
 	unsigned int last_time, cycletime = { 500 }, current_frame = { 0 }, maxframes = { 0 };
-	std::string currentAnimation="", nextAnimation="";
-	int xpos = { 0 }, ypos = {0};
+	std::string currentAnimation = "", nextAnimation = "";
+	int xpos = { 0 }, ypos = { 0 };
+	unsigned int hueColor = { 0x00000000 };//add hue to sprite, ARGB format
+	byte subalpha = { 0x00 }; //0xff-fully transparent, 0x00 - no changes to transparency
 	int framewidth, frameheight, xdistancebetweensprites, ydistancebetweensprites, xstartoffset, ystartoffset;
 	double sizeS = { 1 }, angle = { 0 };
 	std::vector<std::string> split(const std::string& s, char delim) {
@@ -150,8 +152,11 @@ public:
 				sprited->resizeNN(sizeS);
 			if (angle != 0)
 				sprited->rotate(angle);
+			if (hueColor != 0) {
+				sprited->addHue(hueColor);
+			}
 
-			rend.drawSpriteA(*sprited, xpos, ypos, 0, 0, 0, 0, 0);
+			rend.drawSpriteA(*sprited, xpos, ypos, 0, 0, 0, 0, subalpha);
 			if (etime - last_time > cycletime) {
 			if (current_frame >= maxframes)
 			{
@@ -186,6 +191,13 @@ public:
 	void animate(std::string tstring) {
 		nextAnimation = tstring;
 		
+	};
+	void setHue(unsigned int hue) {
+		hueColor = hue;
+	};
+	void setTransparency(byte na) {
+	
+		subalpha = na;
 	};
 	void animateOnce(std::string tstring) {
 		nextAnimation = tstring;
