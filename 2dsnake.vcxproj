@@ -180,6 +180,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="animation.cpp" />
+    <ClCompile Include="ECScomponents.cpp" />
     <ClCompile Include="lib\lodepng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
@@ -188,6 +189,7 @@
     <ClCompile Include="clocker.cpp" />
     <ClCompile Include="engine.h" />
     <ClCompile Include="input.cpp" />
+    <ClCompile Include="ECS.cpp" />
     <ClCompile Include="sprite.cpp" />
     <ClCompile Include="textfield.cpp" />
   </ItemGroup>

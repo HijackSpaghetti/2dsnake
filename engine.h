@@ -6,6 +6,8 @@
 #include "input.cpp"
 #include "textfield.cpp"
 #include "animation.cpp"
+#include "ECS.cpp"
+#include "ECScomponents.cpp"
 
 
 
@@ -92,6 +94,12 @@
             test.animate("IDLE");
             test2.animate("IDLE");
             test2.position(100, 100);
+            ECS tecs;
+            entity& snek(tecs.addEntity());  
+            snek.addComponent<PositionComponent>(20, 20);
+            snek.addComponent<MovementComponent>();
+            snek.deleteComponent<MovementComponent>();
+            tecs.update();
             while (running) {
 
                 //input    
